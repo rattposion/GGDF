@@ -1,4 +1,3 @@
-Crie um projeto web full-stack para um **marketplace de produtos digitais**, estilo DFG ou GGMAX, onde usuários possam comprar e vender:
 
 - Skins de jogos (Steam, CS:GO, Dota 2, etc.)
 - Contas de jogos (Steam, Epic Games, Riot, etc.)
