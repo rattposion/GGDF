@@ -1,0 +1,119 @@
+🧱 MODELOS PRINCIPAIS DO BANCO DE DADOS
+ts
+Copiar
+Editar
+
+// Usuário
+User {
+  id
+  name
+  email
+  password
+  isVerified
+  twoFAEnabled
+  balance
+  totalSales
+  totalPurchases
+  documentUrl
+  reputation
+  isBanned
+  isAdmin
+  createdAt
+}
+
+// Produto
+Product {
+  id
+  title
+  description
+  categoryId
+  subcategoryId
+  sellerId
+  price
+  durationType (day/week/month/lifetime)
+  deliveryType (automatic/manual/bot)
+  stock
+  fileUrl (para entrega automática)
+  steamItemInfo (opcional)
+  status (active/pending/blocked)
+  createdAt
+}
+
+// Pedido
+Order {
+  id
+  buyerId
+  productId
+  sellerId
+  status (pending/paid/delivered/dispute/resolved)
+  deliveryContent (texto, arquivo, login, etc.)
+  createdAt
+}
+
+// Disputa
+Dispute {
+  id
+  orderId
+  openedBy (buyer/seller)
+  messages[]
+  status (open/waiting/resolved)
+  resolution (refund/confirm)
+  evidenceUrls[]
+}
+
+// Chat Compra
+OrderChat {
+  id
+  orderId
+  senderId
+  message
+  createdAt
+}
+
+// Categoria
+Category {
+  id
+  name
+  slug
+  parentId
+}
+
+// Avaliação
+Review {
+  id
+  orderId
+  rating
+  comment
+  buyerId
+  sellerId
+}
+
+// Saques
+Withdrawal {
+  id
+  userId
+  amount
+  status (pending/approved/denied)
+  pixKey
+  createdAt
+}
+
+// Transações
+Transaction {
+  id
+  userId
+  type (deposit/withdrawal/purchase/sale/commission)
+  amount
+  reference
+  createdAt
+}
+
+// Notificações
+Notification {
+  id
+  userId
+  type (sale, message, dispute, question, delivery)
+  content
+  read
+  createdAt
+}

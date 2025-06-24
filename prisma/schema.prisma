@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  password     String
+  avatar       String?
+  steamId      String?
+  balance      Float    @default(0)
+  rating       Float    @default(0)
+  totalSales   Int      @default(0)
+  joinDate     DateTime @default(now())
+  isVerified   Boolean  @default(false)
+  isBanned     Boolean  @default(false)
+  products     Product[]
+  orders       Order[]  @relation("UserOrders")
+  reviews      Review[] @relation("UserReviews")
+  questions    Question[]
+  notifications Notification[]
+  wallet       Wallet?
+}
+
+model Category {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  icon         String
+  description  String
+  subcategories Subcategory[]
+  products     Product[]
+}
+
+model Subcategory {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String
+  category     Category @relation(fields: [categoryId], references: [id])
+  categoryId   String
+  products     Product[]
+}
+
+model Product {
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  price        Float
+  images       String[]
+  category     Category @relation(fields: [categoryId], references: [id])
+  categoryId   String
+  subcategory  Subcategory @relation(fields: [subcategoryId], references: [id])
+  subcategoryId String
+  type         String
+  seller       User     @relation(fields: [sellerId], references: [id])
+  sellerId     String
+  stock        Int?
+  isActive     Boolean  @default(true)
+  hasAutoDelivery Boolean @default(false)
+  deliveryType String?
+  deliveryContent String?
+  guarantee    String?
+  status       String   @default("available")
+  variations   ProductVariation[]
+  subscriptionPlans SubscriptionPlan[]
+  reviews      Review[]
+  questions    Question[]
+  orders       Order[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  views        Int      @default(0)
+  likes        Int      @default(0)
+  rating       Float    @default(0)
+  totalReviews Int      @default(0)
+}
+
+model ProductVariation {
+  id           String   @id @default(uuid())
+  name         String
+  price        Float
+  description  String
+  stock        Int?
+  product      Product  @relation(fields: [productId], references: [id])
+  productId    String
+  subscriptionPlans SubscriptionPlan[]
+}
+
+model SubscriptionPlan {
+  id           String   @id @default(uuid())
+  name         String
+  duration     String
+  price        Float
+  autoRenew    Boolean  @default(false)
+  product      Product? @relation(fields: [productId], references: [id])
+  productId    String?
+  variation    ProductVariation? @relation(fields: [variationId], references: [id])
+  variationId  String?
+}
+
+model Order {
+  id           String   @id @default(uuid())
+  product      Product  @relation(fields: [productId], references: [id])
+  productId    String
+  buyer        User     @relation("UserOrders", fields: [buyerId], references: [id])
+  buyerId      String
+  seller       User     @relation(fields: [sellerId], references: [id])
+  sellerId     String
+  variation    ProductVariation? @relation(fields: [variationId], references: [id])
+  variationId  String?
+  subscriptionPlan SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
+  subscriptionPlanId String?
+  amount       Float
+  status       String
+  paymentMethod String
+  deliveryContent String?
+  createdAt    DateTime @default(now())
+  completedAt  DateTime?
+  chatMessages ChatMessage[]
+  dispute      Dispute?
+}
+
+model Notification {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  type         String
+  title        String
+  message      String
+  read         Boolean  @default(false)
+  actionUrl    String?
+  createdAt    DateTime @default(now())
+}
+
+model Review {
+  id           String   @id @default(uuid())
+  product      Product  @relation(fields: [productId], references: [id])
+  productId    String
+  buyer        User     @relation(fields: [buyerId], references: [id])
+  buyerId      String
+  seller       User     @relation("UserReviews", fields: [sellerId], references: [id])
+  sellerId     String
+  rating       Int
+  comment      String
+  createdAt    DateTime @default(now())
+}
+
+model Question {
+  id           String   @id @default(uuid())
+  product      Product  @relation(fields: [productId], references: [id])
+  productId    String
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  question     String
+  answer       String?
+  createdAt    DateTime @default(now())
+  answeredAt   DateTime?
+}
+
+model ChatMessage {
+  id           String   @id @default(uuid())
+  order        Order    @relation(fields: [orderId], references: [id])
+  orderId      String
+  sender       User     @relation(fields: [senderId], references: [id])
+  senderId     String
+  message      String
+  type         String
+  createdAt    DateTime @default(now())
+}
+
+model Dispute {
+  id           String   @id @default(uuid())
+  order        Order    @relation(fields: [orderId], references: [id])
+  orderId      String
+  reason       String
+  description  String
+  evidence     String[]
+  status       String
+  resolution   String?
+  createdAt    DateTime @default(now())
+  resolvedAt   DateTime?
+}
+
+model Wallet {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String   @unique
+  balance      Float    @default(0)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id           String   @id @default(uuid())
+  wallet       Wallet   @relation(fields: [walletId], references: [id])
+  walletId     String
+  type         String
+  amount       Float
+  status       String
+  createdAt    DateTime @default(now())
+} 
