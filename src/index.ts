@@ -25,11 +25,23 @@ export const io = new Server(server, { cors: { origin: '*' } });
 app.use(cors({
   origin: [
     'http://localhost:5173', // Frontend local
-    'http://localhost:3000', // Alternativo
-    'https://seu-dominio.com' // Produção (ajuste conforme necessário)
+    'https://seu-dominio.com', // Produção (ajuste para seu domínio real)
+    'https://ggdf-production.up.railway.app' // Railway
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+// Middleware para não redirecionar requests OPTIONS
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+  } else {
+    next();
+  }
+});
+
 app.use(express.json());
 app.use(session({ secret: process.env.JWT_SECRET || 'changeme', resave: false, saveUninitialized: false }));
 app.use(passport.initialize());
