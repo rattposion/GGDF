@@ -6,7 +6,7 @@ export const getLeaderboard = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
       orderBy: [{ totalSales: 'desc' }, { rating: 'desc' }],
-      select: { id: true, username: true, avatar: true, totalSales: true, reputation: true }
+      select: { id: true, username: true, avatar: true, totalSales: true, rating: true }
     });
     res.json(users);
   } catch (err) {
