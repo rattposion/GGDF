@@ -23,8 +23,8 @@ COPY prisma ./prisma
 # Gera o Prisma Client
 RUN npx prisma generate
 
-# Executa as migrations no banco
-RUN npx prisma migrate deploy
+# Executa as migrations no banco (apenas em produção/Railway)
+RUN if [ "$RAILWAY" = "true" ]; then npx prisma migrate deploy; fi
 
 # Compila o TypeScript
 RUN npm run build
