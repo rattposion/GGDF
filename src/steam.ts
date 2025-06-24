@@ -6,7 +6,7 @@ passport.use(new SteamStrategy({
   returnURL: process.env.STEAM_RETURN_URL || 'http://localhost:4000/api/auth/steam/return',
   realm: process.env.STEAM_REALM || 'http://localhost:4000/',
   apiKey: process.env.STEAM_API_KEY || 'SUA_STEAM_API_KEY'
-}, async (identifier, profile, done) => {
+}, async (identifier: string, profile: any, done: (err: any, user?: any) => void) => {
   let user = await prisma.user.findUnique({ where: { steamId: profile.id } });
   if (!user) {
     user = await prisma.user.create({
@@ -23,8 +23,8 @@ passport.use(new SteamStrategy({
   return done(null, user);
 }));
 
-passport.serializeUser((user: any, done) => done(null, user.id));
-passport.deserializeUser(async (id: string, done) => {
+passport.serializeUser((user: any, done: (err: any, id?: any) => void) => done(null, user.id));
+passport.deserializeUser(async (id: string, done: (err: any, user?: any) => void) => {
   const user = await prisma.user.findUnique({ where: { id } });
   done(null, user);
 }); 

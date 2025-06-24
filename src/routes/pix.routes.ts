@@ -2,7 +2,7 @@ import { Router } from 'express';
 import axios from 'axios';
 import { authenticate } from '../middlewares/auth.middleware';
 import prisma from '../prisma';
-import { io } from '../socket';
+import { io } from '../index';
 
 const router = Router();
 
