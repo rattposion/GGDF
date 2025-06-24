@@ -13,7 +13,7 @@ model User {
   email        String   @unique
   password     String
   avatar       String?
-  steamId      String?
+  steamId      String? @unique
   balance      Float    @default(0)
   rating       Float    @default(0)
   totalSales   Int      @default(0)
