@@ -42,6 +42,15 @@ app.use((req, res, next) => {
   }
 });
 
+// Middleware de redirecionamento para HTTPS (exceto OPTIONS)
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') return next();
+  if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
+    return res.redirect('https://' + req.headers.host + req.url);
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(session({ secret: process.env.JWT_SECRET || 'changeme', resave: false, saveUninitialized: false }));
 app.use(passport.initialize());
