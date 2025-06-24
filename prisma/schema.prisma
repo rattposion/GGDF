@@ -21,8 +21,8 @@ model User {
   isVerified   Boolean  @default(false)
   isBanned     Boolean  @default(false)
   products     Product[]
-  orders       Order[]  @relation("UserOrders", references: [buyerId])
-  reviews      Review[] @relation("UserReviews", references: [sellerId])
+  orders       Order[]  @relation("UserOrders")
+  reviews      Review[] @relation("UserReviews")
   questions    Question[]
   notifications Notification[]
   wallet       Wallet?
