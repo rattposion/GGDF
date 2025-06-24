@@ -20,8 +20,8 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.1",
     "passport": "^0.6.0",
-    "passport-steam": "^1.0.11",
     "passport-discord": "^0.1.4",
+    "passport-steam": "^1.0.11",
     "prisma": "^6.10.1",
     "socket.io": "^4.7.2",
     "zod": "^3.22.2"
@@ -37,6 +37,7 @@
     "@types/node": "^20.0.0",
     "@types/nodemailer": "^6.4.12",
     "@types/passport": "^1.0.12",
+    "@types/passport-discord": "^0.1.14",
     "@types/socket.io": "^3.0.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.0"
