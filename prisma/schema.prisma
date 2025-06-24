@@ -21,11 +21,14 @@ model User {
   isVerified   Boolean  @default(false)
   isBanned     Boolean  @default(false)
   products     Product[]
-  orders       Order[]  @relation("UserOrders")
-  reviews      Review[] @relation("UserReviews")
+  orders       Order[]  @relation("UserOrders", references: [buyerId])
+  reviews      Review[] @relation("UserReviews", references: [sellerId])
   questions    Question[]
   notifications Notification[]
   wallet       Wallet?
+  ordersVendidos Order[] @relation("UserOrdersVendidos")
+  reviewsComprador Review[] @relation("UserReviewsComprador")
+  sentMessages ChatMessage[] @relation("UserSentMessages")
 }
 
 model Category {
@@ -89,6 +92,7 @@ model ProductVariation {
   product      Product  @relation(fields: [productId], references: [id])
   productId    String
   subscriptionPlans SubscriptionPlan[]
+  orders       Order[] @relation("VariationOrders")
 }
 
 model SubscriptionPlan {
@@ -101,6 +105,7 @@ model SubscriptionPlan {
   productId    String?
   variation    ProductVariation? @relation(fields: [variationId], references: [id])
   variationId  String?
+  orders       Order[] @relation("PlanOrders")
 }
 
 model Order {
@@ -109,11 +114,11 @@ model Order {
   productId    String
   buyer        User     @relation("UserOrders", fields: [buyerId], references: [id])
   buyerId      String
-  seller       User     @relation(fields: [sellerId], references: [id])
+  seller       User     @relation("UserOrdersVendidos", fields: [sellerId], references: [id])
   sellerId     String
-  variation    ProductVariation? @relation(fields: [variationId], references: [id])
+  variation    ProductVariation? @relation("VariationOrders", fields: [variationId], references: [id])
   variationId  String?
-  subscriptionPlan SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
+  subscriptionPlan SubscriptionPlan? @relation("PlanOrders", fields: [subscriptionPlanId], references: [id])
   subscriptionPlanId String?
   amount       Float
   status       String
@@ -141,7 +146,7 @@ model Review {
   id           String   @id @default(uuid())
   product      Product  @relation(fields: [productId], references: [id])
   productId    String
-  buyer        User     @relation(fields: [buyerId], references: [id])
+  buyer        User     @relation("UserReviewsComprador", fields: [buyerId], references: [id])
   buyerId      String
   seller       User     @relation("UserReviews", fields: [sellerId], references: [id])
   sellerId     String
@@ -166,7 +171,7 @@ model ChatMessage {
   id           String   @id @default(uuid())
   order        Order    @relation(fields: [orderId], references: [id])
   orderId      String
-  sender       User     @relation(fields: [senderId], references: [id])
+  sender       User     @relation("UserSentMessages", fields: [senderId], references: [id])
   senderId     String
   message      String
   type         String
@@ -176,7 +181,7 @@ model ChatMessage {
 model Dispute {
   id           String   @id @default(uuid())
   order        Order    @relation(fields: [orderId], references: [id])
-  orderId      String
+  orderId      String @unique
   reason       String
   description  String
   evidence     String[]
