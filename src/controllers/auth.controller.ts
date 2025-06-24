@@ -22,17 +22,25 @@ export const register = async (req: Request, res: Response) => {
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, username: user.username, email: user.email }, token });
   } catch (err) {
+    console.error('Erro no registro:', err);
     res.status(500).json({ error: 'Erro ao registrar.' });
   }
 };
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const { identifier, password } = req.body;
+    if (!identifier || !password) {
       return res.status(400).json({ error: 'Preencha todos os campos.' });
     }
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: identifier },
+          { username: identifier }
+        ]
+      }
+    });
     if (!user) {
       return res.status(400).json({ error: 'Usuário não encontrado.' });
     }
