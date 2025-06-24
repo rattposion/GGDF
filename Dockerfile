@@ -14,6 +14,8 @@ RUN npm install --production=false
 
 # Copia o restante do código
 COPY . .
+# Copia explicitamente a pasta prisma (garantia)
+COPY prisma ./prisma
 
 # Gera o Prisma Client
 RUN npx prisma generate
