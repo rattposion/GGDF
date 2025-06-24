@@ -3,6 +3,9 @@ FROM node:18-alpine AS base
 
 WORKDIR /app
 
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
 # Instala o OpenSSL
 RUN apk add --no-cache openssl
 
