@@ -9,34 +9,35 @@
     "prisma": "prisma"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@prisma/client": "^6.10.1",
+    "axios": "^1.6.8",
+    "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
-    "bcrypt": "^5.1.0",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
     "jsonwebtoken": "^9.0.0",
-    "@prisma/client": "^5.0.0",
-    "zod": "^3.22.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.1",
-    "socket.io": "^4.7.2",
-    "express-session": "^1.17.3",
     "passport": "^0.6.0",
     "passport-steam": "^1.0.11",
-    "axios": "^1.6.8"
+    "prisma": "^6.10.1",
+    "socket.io": "^4.7.2",
+    "zod": "^3.22.2"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "ts-node": "^10.9.1",
-    "@types/node": "^20.0.0",
-    "@types/express": "^4.17.21",
+    "@types/axios": "^0.14.0",
     "@types/bcrypt": "^5.0.0",
-    "@types/jsonwebtoken": "^9.0.2",
     "@types/cors": "^2.8.13",
-    "@types/multer": "^1.4.7",
-    "@types/nodemailer": "^6.4.12",
-    "@types/socket.io": "^3.0.2",
+    "@types/express": "^4.17.21",
     "@types/express-session": "^1.17.7",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/multer": "^1.4.7",
+    "@types/node": "^20.0.0",
+    "@types/nodemailer": "^6.4.12",
     "@types/passport": "^1.0.12",
-    "@types/axios": "^0.14.0"
+    "@types/socket.io": "^3.0.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
   }
-} 
+}
