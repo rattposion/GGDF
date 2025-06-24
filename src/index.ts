@@ -13,6 +13,10 @@ import chatRoutes from './routes/chat.routes';
 import adminRoutes from './routes/admin.routes';
 import steamRoutes from './routes/steam.routes';
 import pixRoutes from './routes/pix.routes';
+import favoriteRoutes from './routes/favorite.routes';
+import highlightRoutes from './routes/highlight.routes';
+import reportRoutes from './routes/report.routes';
+import statsRoutes from './routes/stats.routes';
 import http from 'http';
 import { Server } from 'socket.io';
 
@@ -69,9 +73,13 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/steam', steamRoutes);
 app.use('/api/pix', pixRoutes);
+app.use('/api/favorites', favoriteRoutes);
+app.use('/api/highlights', highlightRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/stats', statsRoutes);
 // (as demais rotas serão adicionadas depois)
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 }); 
