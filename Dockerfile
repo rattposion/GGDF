@@ -3,6 +3,9 @@ FROM node:18-alpine AS base
 
 WORKDIR /app
 
+# Instala o OpenSSL
+RUN apk add --no-cache openssl
+
 # Copia os arquivos de dependências
 COPY package.json package-lock.json ./
 
