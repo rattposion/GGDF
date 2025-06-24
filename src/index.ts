@@ -22,7 +22,14 @@ const app = express();
 const server = http.createServer(app);
 export const io = new Server(server, { cors: { origin: '*' } });
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173', // Frontend local
+    'http://localhost:3000', // Alternativo
+    'https://seu-dominio.com' // Produção (ajuste conforme necessário)
+  ],
+  credentials: true
+}));
 app.use(express.json());
 app.use(session({ secret: process.env.JWT_SECRET || 'changeme', resave: false, saveUninitialized: false }));
 app.use(passport.initialize());
