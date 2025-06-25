@@ -34,6 +34,9 @@ model User {
   favorites    Favorite[]
   highlights   Highlight[]
   reports      Report[]
+  twofa        Boolean   @default(false)
+  kyc          Boolean   @default(false)
+  pix          String?
 }
 
 model Category {
