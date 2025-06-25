@@ -3,6 +3,7 @@ import { register, login, getMe, updateProfile, toggle2FA, changePassword, delet
 import passport from 'passport';
 import { generateJWT } from '../steam';
 import { authenticate } from '../middlewares/auth.middleware';
+import { getUserReviews } from '../controllers/review.controller';
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.put('/users/me/password', authenticate, changePassword);
 router.delete('/users/me', authenticate, deleteAccount);
 router.post('/users/me/kyc', authenticate, uploadKYC);
 router.put('/users/me/pix', authenticate, updatePix);
+router.get('/users/me/reviews', authenticate, getUserReviews);
 
 export default router; 
