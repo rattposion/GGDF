@@ -79,4 +79,79 @@ export const deleteProduct = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao deletar produto.' });
   }
+};
+
+export const getProductQuestions = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const questions = await prisma.question.findMany({
+      where: { productId: id },
+      include: { user: { select: { id: true, username: true, avatar: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(questions);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar perguntas do produto.' });
+  }
+};
+
+export const getProductReviews = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const reviews = await prisma.review.findMany({
+      where: { productId: id },
+      include: { buyer: { select: { id: true, username: true, avatar: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar avaliações do produto.' });
+  }
+};
+
+export const createProductQuestion = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).userId;
+    const { question } = req.body;
+    if (!question || !question.trim()) {
+      return res.status(400).json({ error: 'Pergunta não pode ser vazia.' });
+    }
+    const newQuestion = await prisma.question.create({
+      data: {
+        productId: id,
+        userId,
+        question,
+      },
+    });
+    return res.status(201).json(newQuestion);
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao criar pergunta.' });
+  }
+};
+
+export const createProductReview = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).userId;
+    const { rating, comment } = req.body;
+    if (!rating || !comment || !comment.trim()) {
+      return res.status(400).json({ error: 'Avaliação e comentário são obrigatórios.' });
+    }
+    // Buscar o produto para pegar o sellerId
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
+    const newReview = await prisma.review.create({
+      data: {
+        productId: id,
+        buyerId: userId,
+        sellerId: product.sellerId,
+        rating: Number(rating),
+        comment,
+      },
+    });
+    return res.status(201).json(newReview);
+  } catch (err) {
+    return res.status(500).json({ error: 'Erro ao criar avaliação.' });
+  }
 }; 

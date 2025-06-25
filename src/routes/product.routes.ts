@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createProduct, getProducts, getProductById, updateProduct, deleteProduct } from '../controllers/product.controller';
+import { createProduct, getProducts, getProductById, updateProduct, deleteProduct, getProductQuestions, getProductReviews, createProductQuestion, createProductReview } from '../controllers/product.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import multer from 'multer';
 const upload = multer({ dest: 'uploads/' });
@@ -18,5 +18,10 @@ router.post('/:id/auto-delivery', authenticate, upload.single('file'), async (re
   // Exemplo: await prisma.product.update({ where: { id: req.params.id }, data: { deliveryType: 'file', deliveryFile: req.file.path } });
   res.json({ success: true, file: req.file });
 });
+
+router.get('/:id/questions', getProductQuestions);
+router.get('/:id/reviews', getProductReviews);
+router.post('/:id/questions', authenticate, createProductQuestion);
+router.post('/:id/reviews', authenticate, createProductReview);
 
 export default router; 
