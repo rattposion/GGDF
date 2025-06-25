@@ -18,7 +18,7 @@ passport.use(new SteamStrategy({
         username: profile.displayName,
         steamId: profile.id,
         email: `${profile.id}@steamcommunity.com`,
-        password: '',
+        password: 'social_login',
         avatar: profile.photos?.[2]?.value || profile.photos?.[0]?.value,
         isVerified: true,
       }
@@ -40,7 +40,7 @@ passport.use(new DiscordStrategy({
         username: profile.username,
         discordId: profile.id,
         email: profile.email || `${profile.id}@discord.com`,
-        password: '',
+        password: 'social_login',
         avatar: profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : undefined,
         isVerified: true,
       }
