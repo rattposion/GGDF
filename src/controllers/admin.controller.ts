@@ -65,4 +65,57 @@ export const resolveDispute = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao resolver disputa.' });
   }
+};
+
+// Listar todas as carteiras e saldos dos usuários
+export const getWallets = async (req: Request, res: Response) => {
+  try {
+    const wallets = await prisma.wallet.findMany({
+      include: { user: { select: { id: true, username: true, email: true } } }
+    });
+    res.json(wallets);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar carteiras.' });
+  }
+};
+
+// Listar todas as transações financeiras
+export const getTransactions = async (req: Request, res: Response) => {
+  try {
+    const transactions = await prisma.transaction.findMany({
+      include: { wallet: { include: { user: { select: { id: true, username: true, email: true } } } } },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(transactions);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar transações.' });
+  }
+};
+
+// Listar todos os saques pendentes
+export const getWithdrawals = async (req: Request, res: Response) => {
+  try {
+    const withdrawals = await prisma.transaction.findMany({
+      where: { type: 'withdraw', status: 'pending' },
+      include: { wallet: { include: { user: { select: { id: true, username: true, email: true } } } } },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(withdrawals);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar saques.' });
+  }
+};
+
+// Aprovar saque
+export const approveWithdrawal = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const withdrawal = await prisma.transaction.update({
+      where: { id },
+      data: { status: 'approved' }
+    });
+    res.json(withdrawal);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao aprovar saque.' });
+  }
 }; 
