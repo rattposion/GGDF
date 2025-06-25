@@ -53,4 +53,18 @@ export const login = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao fazer login.' });
   }
+};
+
+// Retorna o usuário autenticado
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    // Retornar apenas os campos públicos
+    const { id, username, email, avatar, steamId, balance, rating, totalSales, joinDate, isVerified, isBanned } = user;
+    res.json({ id, username, email, avatar, steamId, balance, rating, totalSales, joinDate, isVerified, isBanned });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar usuário.' });
+  }
 }; 

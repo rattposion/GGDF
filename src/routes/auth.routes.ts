@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { register, login } from '../controllers/auth.controller';
+import { register, login, getMe } from '../controllers/auth.controller';
 import passport from 'passport';
 import { generateJWT } from '../steam';
 import { authenticate } from '../middlewares/auth.middleware';
-import prisma from '../prisma';
 
 const router = Router();
 
@@ -28,15 +27,6 @@ router.get('/discord/return', passport.authenticate('discord', { failureRedirect
   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?token=${token}`);
 });
 
-router.get('/me', authenticate, async (req, res) => {
-  try {
-    const userId = (req as any).userId;
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-    res.json({ id: user.id, username: user.username, email: user.email, avatar: user.avatar, steamId: user.steamId, discordId: user.discordId });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar usuário.' });
-  }
-});
+router.get('/users/me', authenticate, getMe);
 
 export default router; 
