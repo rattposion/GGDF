@@ -271,7 +271,7 @@ export const getDashboard = async (req: Request, res: Response) => {
     const vendasSemana = await prisma.order.aggregate({ _sum: { amount: true }, where: { createdAt: { gte: semana } } });
     const vendasMes = await prisma.order.aggregate({ _sum: { amount: true }, where: { createdAt: { gte: mes } } });
     const pedidosAndamento = await prisma.order.count({ where: { status: 'em_andamento' } });
-    const novosUsuarios = await prisma.user.count({ where: { createdAt: { gte: semana } } });
+    const novosUsuarios = await prisma.user.count({ where: { joinDate: { gte: semana } } });
     const produtosPendentes = await prisma.product.count({ where: { status: 'pendente' } });
     const disputasAbertas = await prisma.dispute.count({ where: { status: 'aberta' } });
     const valorCustodia = await prisma.order.aggregate({ _sum: { amount: true }, where: { status: 'em_andamento' } });
