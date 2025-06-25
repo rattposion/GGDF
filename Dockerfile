@@ -21,7 +21,7 @@ COPY . .
 COPY prisma ./prisma
 
 # Gera o Prisma Client
-RUN npx prisma generate
+RUN npx prisma generate --schema=prisma/schema.prisma
 
 # Executa as migrations no banco (apenas em produção/Railway)
 RUN if [ "$RAILWAY" = "true" ]; then npx prisma migrate deploy; fi
