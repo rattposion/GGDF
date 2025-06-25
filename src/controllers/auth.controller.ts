@@ -59,11 +59,25 @@ export const login = async (req: Request, res: Response) => {
 export const getMe = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({ 
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        steamId: true,
+        balance: true,
+        rating: true,
+        totalSales: true,
+        joinDate: true,
+        isVerified: true,
+        isBanned: true,
+        isAdmin: true
+      }
+    });
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-    // Retornar apenas os campos públicos
-    const { id, username, email, avatar, steamId, balance, rating, totalSales, joinDate, isVerified, isBanned, isAdmin } = user;
-    res.json({ id, username, email, avatar, steamId, balance, rating, totalSales, joinDate, isVerified, isBanned, isAdmin });
+    res.json({ id: user.id, username: user.username, email: user.email, avatar: user.avatar, steamId: user.steamId, balance: user.balance, rating: user.rating, totalSales: user.totalSales, joinDate: user.joinDate, isVerified: user.isVerified, isBanned: user.isBanned, isAdmin: user.isAdmin });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
   }

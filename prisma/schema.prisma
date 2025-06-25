@@ -22,6 +22,7 @@ model User {
   joinDate     DateTime @default(now())
   isVerified   Boolean  @default(false)
   isBanned     Boolean  @default(false)
+  isAdmin      Boolean  @default(false)
   products     Product[]
   orders       Order[]  @relation("UserOrders")
   reviews      Review[] @relation("UserReviews")
