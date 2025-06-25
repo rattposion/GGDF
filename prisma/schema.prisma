@@ -253,4 +253,14 @@ model Report {
   type        String
   attachment  String?
   createdAt   DateTime @default(now())
+}
+
+model Log {
+  id        String   @id @default(uuid())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+  type      String   // Ex: 'login', 'admin', 'erro', 'acesso', etc
+  message   String
+  meta      Json?
+  createdAt DateTime @default(now())
 } 
