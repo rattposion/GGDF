@@ -256,4 +256,56 @@ export const sendAdminMessage = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao enviar mensagem.' });
   }
+};
+
+// Dashboard KPIs
+export const getDashboard = async (req: Request, res: Response) => {
+  try {
+    // Vendas hoje, semana, mês
+    const hoje = new Date();
+    hoje.setHours(0,0,0,0);
+    const semana = new Date(hoje); semana.setDate(hoje.getDate() - 6);
+    const mes = new Date(hoje); mes.setDate(hoje.getDate() - 29);
+
+    const vendasHoje = await prisma.order.aggregate({ _sum: { total: true }, where: { createdAt: { gte: hoje } } });
+    const vendasSemana = await prisma.order.aggregate({ _sum: { total: true }, where: { createdAt: { gte: semana } } });
+    const vendasMes = await prisma.order.aggregate({ _sum: { total: true }, where: { createdAt: { gte: mes } } });
+    const pedidosAndamento = await prisma.order.count({ where: { status: 'em_andamento' } });
+    const novosUsuarios = await prisma.user.count({ where: { createdAt: { gte: semana } } });
+    const produtosPendentes = await prisma.product.count({ where: { status: 'pendente' } });
+    const disputasAbertas = await prisma.dispute.count({ where: { status: 'aberta' } });
+    const valorCustodia = await prisma.order.aggregate({ _sum: { total: true }, where: { status: 'em_andamento' } });
+    // Uptime simulado (pode ser real se houver monitoramento)
+    const uptime = 99.98;
+    // Últimos saques
+    const ultimosSaques = await prisma.transaction.findMany({ where: { type: 'withdraw' }, orderBy: { createdAt: 'desc' }, take: 5, include: { wallet: { include: { user: true } } } });
+    // Vendas por dia (últimos 7 dias)
+    const vendasPorDia = await Promise.all([...Array(7)].map(async (_, i) => {
+      const dia = new Date(hoje); dia.setDate(hoje.getDate() - (6 - i));
+      const diaFim = new Date(dia); diaFim.setHours(23,59,59,999);
+      const vendas = await prisma.order.aggregate({ _sum: { total: true }, where: { createdAt: { gte: dia, lte: diaFim } } });
+      return { dia: dia.toLocaleDateString('pt-BR', { weekday: 'short' }), vendas: vendas._sum.total || 0 };
+    }));
+    // Alertas rápidos simulados
+    const alertasRapidos = [
+      { tipo: 'danger', msg: 'Muitos reports no anúncio #123' },
+      { tipo: 'warning', msg: 'Disputa aberta há mais de 48h' },
+    ];
+    res.json({
+      vendasHoje: vendasHoje._sum.total || 0,
+      vendasSemana: vendasSemana._sum.total || 0,
+      vendasMes: vendasMes._sum.total || 0,
+      pedidosAndamento,
+      novosUsuarios,
+      produtosPendentes,
+      disputasAbertas,
+      valorCustodia: valorCustodia._sum.total || 0,
+      uptime,
+      ultimosSaques: ultimosSaques.map(s => ({ id: s.id, user: s.wallet?.user?.username || s.wallet?.user?.email, value: s.amount, status: s.status })),
+      vendasPorDia,
+      alertasRapidos
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar dados do dashboard.' });
+  }
 }; 
