@@ -17,6 +17,7 @@ import favoriteRoutes from './routes/favorite.routes';
 import highlightRoutes from './routes/highlight.routes';
 import reportRoutes from './routes/report.routes';
 import statsRoutes from './routes/stats.routes';
+import feedbackRoutes from './routes/feedback.routes';
 import http from 'http';
 import { Server } from 'socket.io';
 
@@ -77,6 +78,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/highlights', highlightRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/feedbacks', feedbackRoutes);
 // (as demais rotas serão adicionadas depois)
 
 const PORT = process.env.PORT || 4000;
