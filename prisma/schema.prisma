@@ -38,6 +38,7 @@ model User {
   twofa        Boolean   @default(false)
   kyc          Boolean   @default(false)
   pix          String?
+  logs         Log[]
 }
 
 model Category {
