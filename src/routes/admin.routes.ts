@@ -34,5 +34,24 @@ router.delete('/questions/:id', authenticate, async (req, res) => {
   await prisma.question.delete({ where: { id: req.params.id } });
   res.json({ success: true });
 });
+router.get('/reports', authenticate, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      prisma.report.findMany({
+        include: { user: { select: { username: true, email: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.report.count()
+    ]);
+    res.json({ data, total, page, limit });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar relatórios.' });
+  }
+});
 
 export default router; 
