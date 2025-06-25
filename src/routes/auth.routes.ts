@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getMe } from '../controllers/auth.controller';
+import { register, login, getMe, updateProfile, toggle2FA, changePassword, deleteAccount, uploadKYC, updatePix } from '../controllers/auth.controller';
 import passport from 'passport';
 import { generateJWT } from '../steam';
 import { authenticate } from '../middlewares/auth.middleware';
@@ -28,5 +28,11 @@ router.get('/discord/return', passport.authenticate('discord', { failureRedirect
 });
 
 router.get('/users/me', authenticate, getMe);
+router.put('/users/me', authenticate, updateProfile);
+router.post('/users/me/2fa', authenticate, toggle2FA);
+router.put('/users/me/password', authenticate, changePassword);
+router.delete('/users/me', authenticate, deleteAccount);
+router.post('/users/me/kyc', authenticate, uploadKYC);
+router.put('/users/me/pix', authenticate, updatePix);
 
 export default router; 
