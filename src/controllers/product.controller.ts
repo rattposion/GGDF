@@ -5,6 +5,10 @@ export const createProduct = async (req: Request, res: Response) => {
   try {
     const { title, description, price, images, categoryId, subcategoryId, type, stock, guarantee } = req.body;
     const sellerId = (req as any).userId;
+    const subcat = await prisma.subcategory.findUnique({ where: { id: subcategoryId } });
+    if (!subcat) {
+      return res.status(400).json({ error: 'Subcategoria inválida.' });
+    }
     const product = await prisma.product.create({
       data: {
         title,
