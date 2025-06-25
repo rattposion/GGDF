@@ -5,7 +5,24 @@ import {
   getProducts,
   setProductActive,
   getOrders,
-  resolveDispute
+  resolveDispute,
+  getWallets,
+  getTransactions,
+  getWithdrawals,
+  approveWithdrawal,
+  getIntegrations,
+  createIntegration,
+  updateIntegration,
+  deleteIntegration,
+  getAffiliates,
+  createAffiliate,
+  updateAffiliate,
+  deleteAffiliate,
+  approveAffiliateWithdrawal,
+  getAdminChats,
+  getAdminMessages,
+  createAdminChat,
+  sendAdminMessage
 } from '../controllers/admin.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import prisma from '../prisma';
@@ -82,5 +99,34 @@ router.get('/logs/analytics', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar analytics dos logs.' });
   }
 });
+router.get('/wallets', authenticate, getWallets);
+router.get('/transactions', authenticate, getTransactions);
+router.get('/withdrawals', authenticate, getWithdrawals);
+router.put('/withdrawals/:id/approve', authenticate, approveWithdrawal);
+router.patch('/reports/:id', authenticate, async (req, res) => {
+  try {
+    const { acao } = req.body;
+    let status = 'pendente';
+    if (acao === 'resolver') status = 'resolvida';
+    if (acao === 'abuso') status = 'abuso';
+    const report = await prisma.report.update({ where: { id: req.params.id }, data: { status } });
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao atualizar denúncia.' });
+  }
+});
+router.get('/integrations', authenticate, getIntegrations);
+router.post('/integrations', authenticate, createIntegration);
+router.put('/integrations/:id', authenticate, updateIntegration);
+router.delete('/integrations/:id', authenticate, deleteIntegration);
+router.get('/affiliates', authenticate, getAffiliates);
+router.post('/affiliates', authenticate, createAffiliate);
+router.put('/affiliates/:id', authenticate, updateAffiliate);
+router.delete('/affiliates/:id', authenticate, deleteAffiliate);
+router.put('/affiliates/:id/approve-withdrawal', authenticate, approveAffiliateWithdrawal);
+router.get('/admin-chats', authenticate, getAdminChats);
+router.get('/admin-chats/:chatId/messages', authenticate, getAdminMessages);
+router.post('/admin-chats', authenticate, createAdminChat);
+router.post('/admin-chats/:chatId/messages', authenticate, sendAdminMessage);
 
 export default router; 
