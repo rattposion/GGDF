@@ -1,5 +1,5 @@
 # Dockerfile para backend Node/Express/Prisma
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 WORKDIR /app
 
@@ -9,22 +9,21 @@ ENV DATABASE_URL=${DATABASE_URL}
 # Instala o OpenSSL
 RUN apk add --no-cache openssl
 
-# Copia os arquivos de dependências
-COPY package.json package-lock.json ./
+# Copia apenas os arquivos de dependências para cache eficiente
+COPY ../package*.json ./
+COPY package*.json ./
 
-# Instala as dependências
+# Instala dependências do backend
 RUN npm install --production=false
 
-# Copia o restante do código
+# Copia o restante do código do backend e o schema do Prisma
 COPY . .
-# Copia explicitamente a pasta prisma (garantia)
-COPY prisma ./prisma
 
-# Gera o Prisma Client
-RUN npx prisma generate --schema=prisma/schema.prisma
+# Gera o Prisma Client a partir da raiz (usando o script já ajustado)
+RUN npx prisma generate --schema=server/prisma/schema.prisma
 
 # Executa as migrations no banco (apenas em produção/Railway)
-RUN if [ "$RAILWAY" = "true" ]; then npx prisma migrate deploy; fi
+RUN if [ "$RAILWAY" = "true" ]; then npx prisma migrate deploy --schema=server/prisma/schema.prisma; fi
 
 # Compila o TypeScript
 RUN npm run build
