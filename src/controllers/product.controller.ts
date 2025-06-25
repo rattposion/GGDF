@@ -21,6 +21,7 @@ export const createProduct = async (req: Request, res: Response) => {
     });
     res.json(product);
   } catch (err) {
+    console.error('Erro ao criar produto:', err);
     res.status(500).json({ error: 'Erro ao criar produto.' });
   }
 };
