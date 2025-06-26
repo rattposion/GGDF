@@ -20,6 +20,7 @@ import statsRoutes from './routes/stats.routes';
 import feedbackRoutes from './routes/feedback.routes';
 import http from 'http';
 import { Server } from 'socket.io';
+import path from 'path';
 
 dotenv.config();
 
@@ -79,6 +80,7 @@ app.use('/api/highlights', highlightRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/feedbacks', feedbackRoutes);
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // (as demais rotas serão adicionadas depois)
 
 const PORT = process.env.PORT || 4000;

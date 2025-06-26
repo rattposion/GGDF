@@ -19,6 +19,16 @@ router.post('/:id/auto-delivery', authenticate, upload.single('file'), async (re
   res.json({ success: true, file: req.file });
 });
 
+// Upload de imagem de produto
+router.post('/upload-image', authenticate, upload.single('image'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  }
+  // Monta a URL pública da imagem
+  const fileUrl = `/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl });
+});
+
 router.get('/:id/questions', getProductQuestions);
 router.get('/:id/reviews', getProductReviews);
 router.post('/:id/questions', authenticate, createProductQuestion);
