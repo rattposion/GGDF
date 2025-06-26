@@ -11,10 +11,17 @@ passport.use(new SteamStrategy({
   realm: process.env.STEAM_REALM || 'http://localhost:4000/',
   apiKey: process.env.STEAM_API_KEY || 'SUA_STEAM_API_KEY'
 }, async (identifier: string, profile: any, done: (err: any, user?: any) => void) => {
-  let user = await prisma.user.findUnique({ where: { steamId: profile.id } });
+  let user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { steamId: profile.id },
+        { email: `${profile.id}@steamcommunity.com` }
+      ]
+    }
+  });
   let steamAvatar = profile.photos?.[2]?.value || profile.photos?.[0]?.value;
   if (!steamAvatar) {
-    steamAvatar = '/steam.svg'; // fallback para avatar padrão
+    steamAvatar = '/steam.svg';
   }
   console.log('Steam avatar:', steamAvatar);
   if (!user) {
@@ -31,10 +38,10 @@ passport.use(new SteamStrategy({
       }
     });
   } else {
-    // Atualiza dados caso já exista
     user = await prisma.user.update({
       where: { id: user.id },
       data: {
+        steamId: profile.id,
         steamUsername: profile.displayName,
         steamAvatar: steamAvatar,
         avatar: steamAvatar,
@@ -50,10 +57,17 @@ passport.use(new DiscordStrategy({
   callbackURL: process.env.DISCORD_CALLBACK_URL || 'http://localhost:4000/api/auth/discord/return',
   scope: ['identify', 'email']
 }, async (accessToken: string, refreshToken: string, profile: any, done: (err: any, user?: any) => void) => {
-  let user = await prisma.user.findUnique({ where: { discordId: profile.id } });
+  let user = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { discordId: profile.id },
+        { email: profile.email || `${profile.id}@discord.com` }
+      ]
+    }
+  });
   let discordAvatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : undefined;
   if (!discordAvatar) {
-    discordAvatar = '/discord.svg'; // fallback para avatar padrão
+    discordAvatar = '/discord.svg';
   }
   console.log('Discord avatar:', discordAvatar);
   if (!user) {
@@ -70,10 +84,10 @@ passport.use(new DiscordStrategy({
       }
     });
   } else {
-    // Atualiza dados caso já exista
     user = await prisma.user.update({
       where: { id: user.id },
       data: {
+        discordId: profile.id,
         discordUsername: profile.username,
         discordAvatar: discordAvatar,
         avatar: discordAvatar,
