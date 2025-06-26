@@ -168,4 +168,32 @@ export const updatePix = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar chave Pix.' });
   }
+};
+
+// Desvincular Steam
+export const unlinkSteam = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    await prisma.user.update({
+      where: { id: userId },
+      data: { steamId: null, steamUsername: null, steamAvatar: null }
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao desvincular Steam.' });
+  }
+};
+
+// Desvincular Discord
+export const unlinkDiscord = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    await prisma.user.update({
+      where: { id: userId },
+      data: { discordId: null, discordUsername: null, discordAvatar: null }
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao desvincular Discord.' });
+  }
 }; 
