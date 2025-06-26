@@ -12,7 +12,11 @@ passport.use(new SteamStrategy({
   apiKey: process.env.STEAM_API_KEY || 'SUA_STEAM_API_KEY'
 }, async (identifier: string, profile: any, done: (err: any, user?: any) => void) => {
   let user = await prisma.user.findUnique({ where: { steamId: profile.id } });
-  const steamAvatar = profile.photos?.[2]?.value || profile.photos?.[0]?.value;
+  let steamAvatar = profile.photos?.[2]?.value || profile.photos?.[0]?.value;
+  if (!steamAvatar) {
+    steamAvatar = '/steam.svg'; // fallback para avatar padrão
+  }
+  console.log('Steam avatar:', steamAvatar);
   if (!user) {
     user = await prisma.user.create({
       data: {
@@ -47,7 +51,11 @@ passport.use(new DiscordStrategy({
   scope: ['identify', 'email']
 }, async (accessToken: string, refreshToken: string, profile: any, done: (err: any, user?: any) => void) => {
   let user = await prisma.user.findUnique({ where: { discordId: profile.id } });
-  const discordAvatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : undefined;
+  let discordAvatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : undefined;
+  if (!discordAvatar) {
+    discordAvatar = '/discord.svg'; // fallback para avatar padrão
+  }
+  console.log('Discord avatar:', discordAvatar);
   if (!user) {
     user = await prisma.user.create({
       data: {
