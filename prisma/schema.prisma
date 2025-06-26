@@ -16,6 +16,8 @@ model User {
   avatar       String?
   steamId      String? @unique
   discordId    String? @unique
+  discordUsername String?
+  discordAvatar String?
   balance      Float    @default(0)
   rating       Float    @default(0)
   totalSales   Int      @default(0)
@@ -332,4 +334,11 @@ model Feedback {
   reportedBy   User?    @relation("FeedbackReportedBy", fields: [reportedById], references: [id])
   reportedById String?
   isAutomatic  Boolean  @default(false)
+}
+
+model ContaVinculada {
+  id         String   @id @default(uuid())
+  discordId  String   @unique
+  steamId    String   @unique
+  createdAt  DateTime @default(now())
 } 

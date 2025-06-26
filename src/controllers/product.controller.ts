@@ -32,8 +32,15 @@ export const createProduct = async (req: Request, res: Response) => {
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
+    const { categoryId, excludeId, limit } = req.query;
+    const where: any = {};
+    if (categoryId) where.categoryId = categoryId;
+    if (excludeId) where.id = { not: excludeId };
     const products = await prisma.product.findMany({
-      include: { seller: true, category: true, subcategory: true }
+      where,
+      include: { seller: true, category: true, subcategory: true },
+      take: limit ? Number(limit) : undefined,
+      orderBy: { createdAt: 'desc' }
     });
     res.json(products);
   } catch (err) {
