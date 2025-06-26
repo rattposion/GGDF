@@ -8,8 +8,10 @@ const router = Router();
 
 router.get('/inventory', authenticate, async (req, res) => {
   const user = (req as any).user;
+  if (!user || !user.steamId) {
+    return res.status(400).json({ error: 'Usuário não vinculado ao Steam.' });
+  }
   const steamId = user.steamId;
-  if (!steamId) return res.status(400).json({ error: 'Usuário não vinculado ao Steam.' });
 
   const url = `https://steamcommunity.com/inventory/${steamId}/730/2?l=english&count=5000`;
   const { data } = await axios.get(url);
