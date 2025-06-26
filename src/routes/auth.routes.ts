@@ -1,52 +1,58 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { register, login, getMe, updateProfile, toggle2FA, changePassword, deleteAccount, uploadKYC, updatePix } from '../controllers/auth.controller';
 import passport from 'passport';
 import { generateJWT } from '../steam';
 import { authenticate } from '../middlewares/auth.middleware';
 import { getUserReviews } from '../controllers/review.controller';
-import { ParsedQs } from 'qs';
 
-const router = Router();
-
-// Adiciona tipagem customizada para req.session.jwt
+// Tipagem para sessões
 declare module 'express-session' {
   interface SessionData {
     jwt?: string;
   }
 }
 
+const router = Router();
+
+// Registro e login padrão
 router.post('/register', register);
 router.post('/login', login);
 
-// Login Steam
-router.get('/steam', (req, res, next) => {
-  // Salva o token JWT da query na sessão, garantindo que seja string
+// 🔗 Login com Steam
+router.get('/steam', (req: Request, res: Response, next: NextFunction) => {
+  // Extrai e valida o token da query
   let token: string | undefined = undefined;
+
   if (typeof req.query.token === 'string') {
     token = req.query.token;
-  } else if (Array.isArray(req.query.token)) {
+  } else if (Array.isArray(req.query.token) && typeof req.query.token[0] === 'string') {
     token = req.query.token[0];
   }
-  // Só atribui se for string
-  if (typeof token === 'string') req.session.jwt = token;
+
+  // Salva na sessão se válido
+  if (token) {
+    req.session.jwt = token;
+  }
+
   passport.authenticate('steam', { failureRedirect: '/' })(req, res, next);
 });
-router.get('/steam/return', passport.authenticate('steam', { failureRedirect: '/' }), (req, res) => {
-  // Gere o token JWT e envie para o frontend via query string
-  const user = req.user as any;
+
+router.get('/steam/return', passport.authenticate('steam', { failureRedirect: '/' }), (req: Request, res: Response) => {
+  const user = req.user as any; // use interface se quiser maior controle
   const token = generateJWT(user);
-  // Redirecione para o frontend com o token
   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?token=${token}`);
 });
 
-// Login Discord
+// 🔗 Login com Discord
 router.get('/discord', passport.authenticate('discord', { scope: ['identify', 'email'], failureRedirect: '/' }));
-router.get('/discord/return', passport.authenticate('discord', { failureRedirect: '/' }), (req, res) => {
+
+router.get('/discord/return', passport.authenticate('discord', { failureRedirect: '/' }), (req: Request, res: Response) => {
   const user = req.user as any;
   const token = generateJWT(user);
   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?token=${token}`);
 });
 
+// 🧾 Rotas autenticadas de usuário
 router.get('/users/me', authenticate, getMe);
 router.put('/users/me', authenticate, updateProfile);
 router.post('/users/me/2fa', authenticate, toggle2FA);
@@ -56,4 +62,4 @@ router.post('/users/me/kyc', authenticate, uploadKYC);
 router.put('/users/me/pix', authenticate, updatePix);
 router.get('/users/me/reviews', authenticate, getUserReviews);
 
-export default router; 
+export default router;
