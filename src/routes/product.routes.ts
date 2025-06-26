@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createProduct, getProducts, getProductById, updateProduct, deleteProduct, getProductQuestions, getProductReviews, createProductQuestion, createProductReview } from '../controllers/product.controller';
+import { createProduct, getProducts, getProductById, updateProduct, deleteProduct, getProductQuestions, getProductReviews, createProductQuestion, createProductReview, getTopProductsByCategory } from '../controllers/product.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import multer from 'multer';
 const upload = multer({ dest: 'uploads/' });
@@ -7,6 +7,7 @@ const upload = multer({ dest: 'uploads/' });
 const router = Router();
 
 router.get('/', getProducts);
+router.get('/top-by-category', getTopProductsByCategory);
 router.get('/:id', getProductById);
 router.post('/', authenticate, createProduct);
 router.put('/:id', authenticate, updateProduct);
