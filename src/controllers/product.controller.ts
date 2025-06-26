@@ -24,6 +24,12 @@ export const createProduct = async (req: Request, res: Response) => {
         guarantee,
       },
     });
+    if (req.body.trade_id) {
+      await prisma.steamTrade.update({
+        where: { tradeId: req.body.trade_id },
+        data: { productId: product.id }
+      });
+    }
     res.json(product);
   } catch (err) {
     console.error('Erro ao criar produto:', err);

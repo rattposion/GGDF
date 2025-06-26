@@ -332,4 +332,17 @@ model Feedback {
   reportedBy   User?    @relation("FeedbackReportedBy", fields: [reportedById], references: [id])
   reportedById String?
   isAutomatic  Boolean  @default(false)
+}
+
+model SteamTrade {
+  id             String   @id @default(uuid())
+  productId      String?  // Preencher após cadastro do produto
+  steamItemId    String
+  itemName       String
+  gameId         String
+  subcategoryId  String
+  tradeId        String
+  status         String   // aguardando_entrega, recebido, cancelado
+  botInventorySlot String?
+  createdAt      DateTime @default(now())
 } 
