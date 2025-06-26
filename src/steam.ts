@@ -32,7 +32,10 @@ passport.use(new SteamStrategy({
     console.log('Steam avatar:', steamAvatar);
     if (!user) {
       // Antes de criar, verifique se já existe usuário com esse email
-      const existingEmail = await prisma.user.findUnique({ where: { email: profile.email } });
+      let existingEmail = null;
+      if (profile.email) {
+        existingEmail = await prisma.user.findUnique({ where: { email: profile.email } });
+      }
       if (existingEmail) {
         // Atualiza apenas os campos de Steam
         user = await prisma.user.update({
