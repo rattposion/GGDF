@@ -9,12 +9,13 @@ export const createProduct = async (req: Request, res: Response) => {
     if (!subcat) {
       return res.status(400).json({ error: 'Subcategoria inválida.' });
     }
+    const imagesArray = !images ? [] : Array.isArray(images) ? images : [images];
     const product = await prisma.product.create({
       data: {
         title,
         description,
         price: Number(price),
-        images,
+        images: imagesArray,
         categoryId,
         subcategoryId,
         type,
