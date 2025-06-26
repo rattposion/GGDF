@@ -21,13 +21,14 @@ router.post('/login', login);
 // Login Steam
 router.get('/steam', (req, res, next) => {
   // Salva o token JWT da query na sessão, garantindo que seja string
-  let token: string | undefined;
-  if (typeof req.query.token === 'string') {
-    token = req.query.token;
-  } else if (Array.isArray(req.query.token)) {
-    token = req.query.token[0];
+  const tokenRaw = req.query.token;
+  let token: string | undefined = undefined;
+  if (typeof tokenRaw === 'string') {
+    token = tokenRaw;
+  } else if (Array.isArray(tokenRaw)) {
+    token = tokenRaw[0];
   }
-  if (token) req.session.jwt = token;
+  if (token && typeof token === 'string') req.session.jwt = token;
   passport.authenticate('steam', { failureRedirect: '/' })(req, res, next);
 });
 router.get('/steam/return', passport.authenticate('steam', { failureRedirect: '/' }), (req, res) => {
