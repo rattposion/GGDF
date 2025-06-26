@@ -12,15 +12,16 @@ router.get('/inventory', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'Usuário não vinculado ao Steam.' });
   }
   const steamId = user.steamId;
-  const url = `https://steamcommunity.com/inventory/${steamId}/730/2?l=english&count=5000`;
   try {
-    const { data } = await axios.get(url);
-    res.json(data);
+    // Busca via bot logado
+    const { inventory, currencies } = await steamBot.getUserInventory(steamId, 730, 2);
+    res.json({ inventory, currencies });
   } catch (err: any) {
-    if (err.response && (err.response.status === 403 || err.response.status === 404)) {
+    console.error('Erro ao buscar inventário via bot:', err && err.message, err && err.stack);
+    if (err.message && (err.message.includes('This profile is private') || err.message.includes('not found'))) {
       return res.status(403).json({ error: 'Inventário privado ou não encontrado. Torne seu inventário público nas configurações da Steam.' });
     }
-    res.status(502).json({ error: 'Erro ao acessar a Steam. Tente novamente mais tarde.' });
+    res.status(502).json({ error: 'Erro ao acessar a Steam via bot. Tente novamente mais tarde.' });
   }
 });
 
