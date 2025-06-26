@@ -7,7 +7,6 @@ const steamBot = require('../bot/steamBot');
 const router = Router();
 
 router.get('/inventory', authenticate, async (req, res) => {
-  console.log('req.user:', (req as any).user);
   const user = (req as any).user;
   if (!user || !user.steamId) {
     return res.status(400).json({ error: 'Usuário não vinculado ao Steam.' });
@@ -15,8 +14,12 @@ router.get('/inventory', authenticate, async (req, res) => {
   const steamId = user.steamId;
 
   const url = `https://steamcommunity.com/inventory/${steamId}/730/2?l=english&count=5000`;
-  const { data } = await axios.get(url);
-  res.json(data);
+  try {
+    const { data } = await axios.get(url);
+    res.json(data);
+  } catch (err) {
+    res.status(502).json({ error: 'Erro ao acessar a Steam. Tente novamente mais tarde.' });
+  }
 });
 
 // Criar trade offer REAL
