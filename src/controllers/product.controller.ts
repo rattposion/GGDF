@@ -82,7 +82,8 @@ export const deleteProduct = async (req: Request, res: Response) => {
     }
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao deletar produto.' });
+    console.error('Erro ao deletar produto:', err);
+    res.status(500).json({ error: 'Erro ao deletar produto.', details: err });
   }
 };
 
