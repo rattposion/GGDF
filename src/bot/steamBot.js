@@ -86,10 +86,27 @@ manager.on('sentOfferChanged', async (offer, oldState) => {
   // Aqui pode notificar o backend via API/webhook se desejar
 });
 
+// Buscar inventário de um usuário via bot logado
+function getUserInventory(steamId, appid = 730, contextid = 2) {
+  return new Promise((resolve, reject) => {
+    community.getUserInventoryContents(
+      steamId,
+      appid,
+      contextid,
+      true, // tradableOnly
+      (err, inventory, currencies) => {
+        if (err) return reject(err);
+        resolve({ inventory, currencies });
+      }
+    );
+  });
+}
+
 module.exports = {
   login,
   sendTradeOffer,
   getTradeStatus,
+  getUserInventory,
 };
 
 // Auto login ao importar
