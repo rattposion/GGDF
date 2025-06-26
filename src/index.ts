@@ -26,7 +26,17 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-export const io = new Server(server, { cors: { origin: '*' } });
+export const io = new Server(server, {
+  cors: {
+    origin: [
+      'http://localhost:5173',
+      'https://ggdf-production.up.railway.app',
+      'https://seu-dominio.com'
+    ],
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
 
 app.use(cors({
   origin: [
