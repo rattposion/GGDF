@@ -308,4 +308,17 @@ export const getDashboard = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar dados do dashboard.' });
   }
+};
+
+export const highlightProduct = async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const product = await prisma.product.update({
+      where: { id: productId },
+      data: { highlighted: true },
+    });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao destacar produto.' });
+  }
 }; 
