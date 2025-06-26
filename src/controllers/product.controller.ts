@@ -61,6 +61,9 @@ export const updateProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     const sellerId = (req as any).userId;
     const data = req.body;
+    if (data.images !== undefined) {
+      data.images = !data.images ? [] : Array.isArray(data.images) ? data.images : [data.images];
+    }
     const product = await prisma.product.update({
       where: { id, sellerId },
       data,
