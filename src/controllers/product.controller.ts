@@ -81,7 +81,10 @@ export const deleteProduct = async (req: Request, res: Response) => {
       await prisma.product.delete({ where: { id, sellerId } });
     }
     res.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
+    if (err.code === 'P2003') {
+      return res.status(400).json({ error: 'Não é possível excluir este produto porque ele está vinculado a um ou mais pedidos.' });
+    }
     console.error('Erro ao deletar produto:', err);
     res.status(500).json({ error: 'Erro ao deletar produto.', details: err });
   }
