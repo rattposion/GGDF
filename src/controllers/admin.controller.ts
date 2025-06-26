@@ -310,7 +310,7 @@ export const getDashboard = async (req: Request, res: Response) => {
   }
 };
 
-export const highlightProduct = async (req, res) => {
+export const highlightProduct = async (req: Request, res: Response) => {
   const { productId } = req.params;
   try {
     const product = await prisma.product.update({

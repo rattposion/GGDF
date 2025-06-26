@@ -23,7 +23,8 @@ import {
   getAdminMessages,
   createAdminChat,
   sendAdminMessage,
-  getDashboard
+  getDashboard,
+  highlightProduct
 } from '../controllers/admin.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import prisma from '../prisma';
@@ -130,5 +131,6 @@ router.get('/admin-chats/:chatId/messages', authenticate, getAdminMessages);
 router.post('/admin-chats', authenticate, createAdminChat);
 router.post('/admin-chats/:chatId/messages', authenticate, sendAdminMessage);
 router.get('/dashboard', authenticate, getDashboard);
+router.put('/products/:productId/highlight', authenticate, highlightProduct);
 
 export default router; 
