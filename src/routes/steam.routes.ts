@@ -29,6 +29,14 @@ router.get('/inventory', authenticate, async (req, res) => {
 router.post('/trade-offer', authenticate, async (req, res) => {
   const user = (req as any).user;
   const { steam_item_id, appid, item_name, subcategory_id, product_id } = req.body;
+  console.log('Dados recebidos para trade-offer:', {
+    userSteamId: user.steamId,
+    steam_item_id,
+    appid,
+    item_name,
+    subcategory_id,
+    product_id
+  });
   try {
     // Chama o bot real
     const { tradeId, status } = await steamBot.sendTradeOffer({
@@ -50,7 +58,8 @@ router.post('/trade-offer', authenticate, async (req, res) => {
     });
     res.json({ trade_id: tradeId });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao criar trade offer.' });
+    console.error('Erro ao criar trade offer:', err);
+    res.status(500).json({ error: 'Erro ao criar trade offer.', details: (err as any)?.message || err });
   }
 });
 
