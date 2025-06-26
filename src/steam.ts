@@ -11,44 +11,65 @@ passport.use(new SteamStrategy({
   realm: process.env.STEAM_REALM || 'http://localhost:4000/',
   apiKey: process.env.STEAM_API_KEY || 'SUA_STEAM_API_KEY'
 }, async (identifier: string, profile: any, done: (err: any, user?: any) => void) => {
-  let user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { steamId: profile.id },
-        { email: `${profile.id}@steamcommunity.com` }
-      ]
+  try {
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { steamId: profile.id },
+          { email: `${profile.id}@steamcommunity.com` },
+          { email: profile.email }
+        ]
+      }
+    });
+    let steamAvatar = profile.photos?.[2]?.value || profile.photos?.[0]?.value;
+    if (!steamAvatar) {
+      steamAvatar = '/steam.svg';
     }
-  });
-  let steamAvatar = profile.photos?.[2]?.value || profile.photos?.[0]?.value;
-  if (!steamAvatar) {
-    steamAvatar = '/steam.svg';
-  }
-  console.log('Steam avatar:', steamAvatar);
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        username: profile.displayName,
-        steamId: profile.id,
-        steamUsername: profile.displayName,
-        steamAvatar: steamAvatar,
-        email: `${profile.id}@steamcommunity.com`,
-        password: 'social_login',
-        avatar: steamAvatar,
-        isVerified: true,
+    console.log('Steam avatar:', steamAvatar);
+    if (!user) {
+      // Antes de criar, verifique se já existe usuário com esse email
+      const existingEmail = await prisma.user.findUnique({ where: { email: profile.email } });
+      if (existingEmail) {
+        // Atualiza apenas os campos de Steam
+        user = await prisma.user.update({
+          where: { id: existingEmail.id },
+          data: {
+            steamId: profile.id,
+            steamUsername: profile.displayName,
+            steamAvatar: steamAvatar,
+            avatar: steamAvatar,
+          }
+        });
+      } else {
+        user = await prisma.user.create({
+          data: {
+            username: profile.displayName,
+            steamId: profile.id,
+            steamUsername: profile.displayName,
+            steamAvatar: steamAvatar,
+            email: `${profile.id}@steamcommunity.com`,
+            password: 'social_login',
+            avatar: steamAvatar,
+            isVerified: true,
+          }
+        });
       }
-    });
-  } else {
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        steamId: profile.id,
-        steamUsername: profile.displayName,
-        steamAvatar: steamAvatar,
-        avatar: steamAvatar,
-      }
-    });
+    } else {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          steamId: profile.id,
+          steamUsername: profile.displayName,
+          steamAvatar: steamAvatar,
+          avatar: steamAvatar,
+        }
+      });
+    }
+    return done(null, user);
+  } catch (err) {
+    console.error('Erro no login Steam:', err);
+    return done(err);
   }
-  return done(null, user);
 }));
 
 passport.use(new DiscordStrategy({
@@ -57,44 +78,65 @@ passport.use(new DiscordStrategy({
   callbackURL: process.env.DISCORD_CALLBACK_URL || 'http://localhost:4000/api/auth/discord/return',
   scope: ['identify', 'email']
 }, async (accessToken: string, refreshToken: string, profile: any, done: (err: any, user?: any) => void) => {
-  let user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { discordId: profile.id },
-        { email: profile.email || `${profile.id}@discord.com` }
-      ]
+  try {
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { discordId: profile.id },
+          { email: profile.email || `${profile.id}@discord.com` },
+          { email: profile.email }
+        ]
+      }
+    });
+    let discordAvatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : undefined;
+    if (!discordAvatar) {
+      discordAvatar = '/discord.svg';
     }
-  });
-  let discordAvatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : undefined;
-  if (!discordAvatar) {
-    discordAvatar = '/discord.svg';
-  }
-  console.log('Discord avatar:', discordAvatar);
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        username: profile.username,
-        discordId: profile.id,
-        discordUsername: profile.username,
-        discordAvatar: discordAvatar,
-        email: profile.email || `${profile.id}@discord.com`,
-        password: 'social_login',
-        avatar: discordAvatar,
-        isVerified: true,
+    console.log('Discord avatar:', discordAvatar);
+    if (!user) {
+      // Antes de criar, verifique se já existe usuário com esse email
+      const existingEmail = await prisma.user.findUnique({ where: { email: profile.email } });
+      if (existingEmail) {
+        // Atualiza apenas os campos de Discord
+        user = await prisma.user.update({
+          where: { id: existingEmail.id },
+          data: {
+            discordId: profile.id,
+            discordUsername: profile.username,
+            discordAvatar: discordAvatar,
+            avatar: discordAvatar,
+          }
+        });
+      } else {
+        user = await prisma.user.create({
+          data: {
+            username: profile.username,
+            discordId: profile.id,
+            discordUsername: profile.username,
+            discordAvatar: discordAvatar,
+            email: profile.email || `${profile.id}@discord.com`,
+            password: 'social_login',
+            avatar: discordAvatar,
+            isVerified: true,
+          }
+        });
       }
-    });
-  } else {
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        discordId: profile.id,
-        discordUsername: profile.username,
-        discordAvatar: discordAvatar,
-        avatar: discordAvatar,
-      }
-    });
+    } else {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          discordId: profile.id,
+          discordUsername: profile.username,
+          discordAvatar: discordAvatar,
+          avatar: discordAvatar,
+        }
+      });
+    }
+    return done(null, user);
+  } catch (err) {
+    console.error('Erro no login Discord:', err);
+    return done(err);
   }
-  return done(null, user);
 }));
 
 passport.serializeUser((user: any, done: (err: any, id?: any) => void) => done(null, user.id));
