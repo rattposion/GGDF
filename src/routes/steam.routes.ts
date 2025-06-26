@@ -7,6 +7,7 @@ const steamBot = require('../bot/steamBot');
 const router = Router();
 
 router.get('/inventory', authenticate, async (req, res) => {
+  console.log('req.user:', (req as any).user);
   const user = (req as any).user;
   if (!user || !user.steamId) {
     return res.status(400).json({ error: 'Usuário não vinculado ao Steam.' });
