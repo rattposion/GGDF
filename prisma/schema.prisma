@@ -341,7 +341,7 @@ model SteamTrade {
   itemName       String
   gameId         String
   subcategoryId  String
-  tradeId        String
+  tradeId        String   @unique
   status         String   // aguardando_entrega, recebido, cancelado
   botInventorySlot String?
   createdAt      DateTime @default(now())
