@@ -9,13 +9,12 @@ export const createProduct = async (req: Request, res: Response) => {
     if (!subcat) {
       return res.status(400).json({ error: 'Subcategoria inválida.' });
     }
-    const imagesArray = !images ? [] : Array.isArray(images) ? images : [images];
     const product = await prisma.product.create({
       data: {
         title,
         description,
         price: Number(price),
-        images: imagesArray,
+        images,
         categoryId,
         subcategoryId,
         type,
@@ -24,12 +23,6 @@ export const createProduct = async (req: Request, res: Response) => {
         guarantee,
       },
     });
-    if (req.body.trade_id) {
-      await prisma.steamTrade.update({
-        where: { tradeId: req.body.trade_id },
-        data: { productId: product.id }
-      });
-    }
     res.json(product);
   } catch (err) {
     console.error('Erro ao criar produto:', err);
@@ -51,13 +44,16 @@ export const getProducts = async (req: Request, res: Response) => {
 export const getProductById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    console.log('[getProductById] ID recebido:', id);
     const product = await prisma.product.findUnique({
       where: { id },
       include: { seller: true, category: true, subcategory: true }
     });
+    console.log('[getProductById] Produto encontrado:', product);
     if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
     res.json(product);
   } catch (err) {
+    console.error('[getProductById] Erro:', err);
     res.status(500).json({ error: 'Erro ao buscar produto.' });
   }
 };
@@ -67,9 +63,6 @@ export const updateProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     const sellerId = (req as any).userId;
     const data = req.body;
-    if (data.images !== undefined) {
-      data.images = !data.images ? [] : Array.isArray(data.images) ? data.images : [data.images];
-    }
     const product = await prisma.product.update({
       where: { id, sellerId },
       data,
@@ -83,20 +76,11 @@ export const updateProduct = async (req: Request, res: Response) => {
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const isAdmin = (req as any).isAdmin;
     const sellerId = (req as any).userId;
-    if (isAdmin) {
-      await prisma.product.delete({ where: { id } });
-    } else {
-      await prisma.product.delete({ where: { id, sellerId } });
-    }
+    await prisma.product.delete({ where: { id, sellerId } });
     res.json({ success: true });
-  } catch (err: any) {
-    if (err.code === 'P2003') {
-      return res.status(400).json({ error: 'Não é possível excluir este produto porque ele está vinculado a um ou mais pedidos.' });
-    }
-    console.error('Erro ao deletar produto:', err);
-    res.status(500).json({ error: 'Erro ao deletar produto.', details: err });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao deletar produto.' });
   }
 };
 
