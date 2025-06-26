@@ -25,9 +25,6 @@ RUN if [ "$RAILWAY" = "true" ]; then npx prisma migrate deploy --schema=prisma/s
 # Compila o TypeScript
 RUN npm run build
 
-# Copia a pasta do bot para o dist (necessário para require funcionar)
-RUN cp -r src/bot dist/bot
-
 # Exponha a porta da API
 EXPOSE 4000
 

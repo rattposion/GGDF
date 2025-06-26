@@ -160,4 +160,34 @@ export const createProductReview = async (req: Request, res: Response) => {
   } catch (err) {
     return res.status(500).json({ error: 'Erro ao criar avaliação.' });
   }
+};
+
+export const getTopProductsByCategory = async (req: Request, res: Response) => {
+  try {
+    // Busca todas as categorias
+    const categories = await prisma.category.findMany();
+    // Para cada categoria, busca os 2 produtos com mais pedidos
+    const result = await Promise.all(categories.map(async (category) => {
+      // Busca todos os produtos da categoria
+      const products = await prisma.product.findMany({
+        where: { categoryId: category.id },
+        include: { orders: true, seller: true, category: true, subcategory: true }
+      });
+      // Ordena por quantidade de pedidos (orders.length) e pega os 2 primeiros
+      const topProducts = products
+        .sort((a, b) => (b.orders?.length || 0) - (a.orders?.length || 0))
+        .slice(0, 2);
+      return {
+        category: {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+        },
+        products: topProducts
+      };
+    }));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar produtos mais vendidos por categoria.' });
+  }
 }; 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getMe, updateProfile, toggle2FA, changePassword, deleteAccount, uploadKYC, updatePix, unlinkSteam, unlinkDiscord } from '../controllers/auth.controller';
+import { register, login, getMe, updateProfile, toggle2FA, changePassword, deleteAccount, uploadKYC, updatePix } from '../controllers/auth.controller';
 import passport from 'passport';
 import { generateJWT } from '../steam';
 import { authenticate } from '../middlewares/auth.middleware';
@@ -36,7 +36,5 @@ router.delete('/users/me', authenticate, deleteAccount);
 router.post('/users/me/kyc', authenticate, uploadKYC);
 router.put('/users/me/pix', authenticate, updatePix);
 router.get('/users/me/reviews', authenticate, getUserReviews);
-router.delete('/unlink/steam', authenticate, unlinkSteam);
-router.delete('/unlink/discord', authenticate, unlinkDiscord);
 
 export default router; 

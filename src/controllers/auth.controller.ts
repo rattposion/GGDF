@@ -19,7 +19,7 @@ export const register = async (req: Request, res: Response) => {
     const user = await prisma.user.create({
       data: { username, email, password: hash }
     });
-    const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, username: user.username, email: user.email }, token });
   } catch (err) {
     console.error('Erro no registro:', err);
@@ -48,7 +48,7 @@ export const login = async (req: Request, res: Response) => {
     if (!valid) {
       return res.status(400).json({ error: 'Senha incorreta.' });
     }
-    const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, username: user.username, email: user.email }, token });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao fazer login.' });
@@ -67,11 +67,6 @@ export const getMe = async (req: Request, res: Response) => {
         email: true,
         avatar: true,
         steamId: true,
-        steamUsername: true,
-        steamAvatar: true,
-        discordId: true,
-        discordUsername: true,
-        discordAvatar: true,
         balance: true,
         rating: true,
         totalSales: true,
@@ -82,7 +77,7 @@ export const getMe = async (req: Request, res: Response) => {
       }
     });
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-    res.json(user);
+    res.json({ id: user.id, username: user.username, email: user.email, avatar: user.avatar, steamId: user.steamId, balance: user.balance, rating: user.rating, totalSales: user.totalSales, joinDate: user.joinDate, isVerified: user.isVerified, isBanned: user.isBanned, isAdmin: user.isAdmin });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
   }
@@ -167,33 +162,5 @@ export const updatePix = async (req: Request, res: Response) => {
     res.json({ pix: user.pix });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar chave Pix.' });
-  }
-};
-
-// Desvincular Steam
-export const unlinkSteam = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).userId;
-    await prisma.user.update({
-      where: { id: userId },
-      data: { steamId: null, steamUsername: null, steamAvatar: null }
-    });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao desvincular Steam.' });
-  }
-};
-
-// Desvincular Discord
-export const unlinkDiscord = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).userId;
-    await prisma.user.update({
-      where: { id: userId },
-      data: { discordId: null, discordUsername: null, discordAvatar: null }
-    });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao desvincular Discord.' });
   }
 }; 

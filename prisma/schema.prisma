@@ -15,11 +15,7 @@ model User {
   password     String
   avatar       String?
   steamId      String? @unique
-  steamUsername String?
-  steamAvatar   String?
   discordId    String? @unique
-  discordUsername String?
-  discordAvatar   String?
   balance      Float    @default(0)
   rating       Float    @default(0)
   totalSales   Int      @default(0)
@@ -104,7 +100,6 @@ model Product {
   totalReviews Int      @default(0)
   favorites    Favorite[]
   highlights   Highlight[]
-  highlighted  Boolean  @default(false)
 }
 
 model ProductVariation {
@@ -182,7 +177,7 @@ model Review {
 
 model Question {
   id           String   @id @default(uuid())
-  product      Product  @relation(fields: [productId], references: [id])
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId    String
   user         User     @relation(fields: [userId], references: [id])
   userId       String
@@ -337,17 +332,4 @@ model Feedback {
   reportedBy   User?    @relation("FeedbackReportedBy", fields: [reportedById], references: [id])
   reportedById String?
   isAutomatic  Boolean  @default(false)
-}
-
-model SteamTrade {
-  id             String   @id @default(uuid())
-  productId      String?  // Preencher após cadastro do produto
-  steamItemId    String
-  itemName       String
-  gameId         String
-  subcategoryId  String
-  tradeId        String   @unique
-  status         String   // aguardando_entrega, recebido, cancelado
-  botInventorySlot String?
-  createdAt      DateTime @default(now())
 } 

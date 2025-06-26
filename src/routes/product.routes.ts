@@ -25,7 +25,7 @@ router.post('/upload-image', authenticate, upload.single('image'), async (req, r
     return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   }
   // Monta a URL pública da imagem
-  const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  const fileUrl = `/uploads/${req.file.filename}`;
   res.json({ url: fileUrl });
 });
 
