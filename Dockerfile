@@ -17,7 +17,6 @@ COPY . .
 RUN npm install --production=false
 
 # Gera o Prisma Client
-WORKDIR /app/server
 RUN npx prisma generate --schema=prisma/schema.prisma
 
 # Executa as migrations no banco (apenas em produção/Railway)
