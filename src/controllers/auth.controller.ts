@@ -19,7 +19,7 @@ export const register = async (req: Request, res: Response) => {
     const user = await prisma.user.create({
       data: { username, email, password: hash }
     });
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, username: user.username, email: user.email }, token });
   } catch (err) {
     console.error('Erro no registro:', err);
@@ -48,7 +48,7 @@ export const login = async (req: Request, res: Response) => {
     if (!valid) {
       return res.status(400).json({ error: 'Senha incorreta.' });
     }
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, username: user.username, email: user.email }, token });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao fazer login.' });

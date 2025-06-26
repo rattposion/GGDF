@@ -73,8 +73,13 @@ export const updateProduct = async (req: Request, res: Response) => {
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const isAdmin = (req as any).isAdmin;
     const sellerId = (req as any).userId;
-    await prisma.product.delete({ where: { id, sellerId } });
+    if (isAdmin) {
+      await prisma.product.delete({ where: { id } });
+    } else {
+      await prisma.product.delete({ where: { id, sellerId } });
+    }
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao deletar produto.' });
