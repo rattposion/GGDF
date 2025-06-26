@@ -15,7 +15,7 @@ router.get('/inventory', authenticate, async (req, res) => {
   try {
     // Busca via bot logado
     const { inventory, currencies } = await steamBot.getUserInventory(steamId, 730, 2);
-    res.json({ inventory, currencies });
+    res.json({ assets: inventory, descriptions: [], currencies });
   } catch (err: any) {
     console.error('Erro ao buscar inventário via bot:', err && err.message, err && err.stack);
     if (err.message && (err.message.includes('This profile is private') || err.message.includes('not found'))) {
