@@ -11,12 +11,10 @@ RUN apk add --no-cache openssl
 
 # Copia apenas os arquivos de dependências para cache eficiente
 COPY package*.json ./
+COPY . .
 
 # Instala dependências do backend
 RUN npm install --production=false
-
-# Copia o restante do código do backend e o schema do Prisma
-COPY . .
 
 # Gera o Prisma Client
 WORKDIR /app/server
