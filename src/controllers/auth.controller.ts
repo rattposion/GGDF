@@ -67,6 +67,11 @@ export const getMe = async (req: Request, res: Response) => {
         email: true,
         avatar: true,
         steamId: true,
+        steamUsername: true,
+        steamAvatar: true,
+        discordId: true,
+        discordUsername: true,
+        discordAvatar: true,
         balance: true,
         rating: true,
         totalSales: true,
@@ -77,7 +82,7 @@ export const getMe = async (req: Request, res: Response) => {
       }
     });
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-    res.json({ id: user.id, username: user.username, email: user.email, avatar: user.avatar, steamId: user.steamId, balance: user.balance, rating: user.rating, totalSales: user.totalSales, joinDate: user.joinDate, isVerified: user.isVerified, isBanned: user.isBanned, isAdmin: user.isAdmin });
+    res.json(user);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
   }

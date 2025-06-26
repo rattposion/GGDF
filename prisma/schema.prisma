@@ -15,7 +15,11 @@ model User {
   password     String
   avatar       String?
   steamId      String? @unique
+  steamUsername String?
+  steamAvatar   String?
   discordId    String? @unique
+  discordUsername String?
+  discordAvatar   String?
   balance      Float    @default(0)
   rating       Float    @default(0)
   totalSales   Int      @default(0)
