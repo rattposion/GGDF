@@ -7,6 +7,13 @@ import { getUserReviews } from '../controllers/review.controller';
 
 const router = Router();
 
+// Adiciona tipagem customizada para req.session.jwt
+declare module 'express-session' {
+  interface SessionData {
+    jwt?: string;
+  }
+}
+
 router.post('/register', register);
 router.post('/login', login);
 

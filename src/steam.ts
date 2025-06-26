@@ -24,7 +24,13 @@ passport.use(new SteamStrategy({
   let userId;
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    userId = decoded.id;
+    if (typeof decoded === 'string') {
+      userId = decoded;
+    } else if (typeof decoded === 'object' && decoded && 'id' in decoded) {
+      userId = (decoded as any).id;
+    } else {
+      return done(new Error('Token inválido. Faça login novamente.'));
+    }
   } catch {
     return done(new Error('Token inválido. Faça login novamente.'));
   }
