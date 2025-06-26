@@ -11,7 +11,11 @@ router.post('/register', register);
 router.post('/login', login);
 
 // Login Steam
-router.get('/steam', passport.authenticate('steam', { failureRedirect: '/' }));
+router.get('/steam', (req, res, next) => {
+  // Salva o token JWT da query na sessão
+  if (req.query.token) req.session.jwt = req.query.token;
+  passport.authenticate('steam', { failureRedirect: '/' })(req, res, next);
+});
 router.get('/steam/return', passport.authenticate('steam', { failureRedirect: '/' }), (req, res) => {
   // Gere o token JWT e envie para o frontend via query string
   const user = req.user as any;

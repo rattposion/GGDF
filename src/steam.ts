@@ -16,11 +16,17 @@ passport.use(new SteamStrategy({
   if (existing) {
     return done(new Error('Esta conta Steam já está vinculada a outro usuário Discord.'));
   }
-  // Aqui você deve obter o usuário logado (ex: pelo session/cookie)
-  // Exemplo: const userId = profile.req?.user?.id;
-  const userId = profile.req?.user?.id;
-  if (!userId) {
-    return done(new Error('É necessário estar logado com Discord para vincular uma conta Steam.'));
+  // Recupera o token JWT da sessão
+  const token = profile.req?.session?.jwt;
+  if (!token) {
+    return done(new Error('Token de autenticação não encontrado. Faça login com Discord antes de vincular Steam.'));
+  }
+  let userId;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.id;
+  } catch {
+    return done(new Error('Token inválido. Faça login novamente.'));
   }
   // Verifica se já existe vínculo para esse Discord
   const existingDiscord = await prisma.contaVinculada.findUnique({ where: { discordId: userId } });
