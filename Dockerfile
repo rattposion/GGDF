@@ -1,4 +1,4 @@
-# Dockerfile para backend Node/Express/Prisma (build a partir da raiz)
+# Dockerfile para backend Node/Express/Prisma (build dentro de /server)
 FROM node:20-alpine
 
 WORKDIR /app
@@ -10,7 +10,6 @@ ENV DATABASE_URL=${DATABASE_URL}
 RUN apk add --no-cache openssl
 
 # Copia apenas os arquivos de dependências para cache eficiente
-COPY server/package*.json ./server/
 COPY package*.json ./
 
 # Instala dependências do backend
@@ -18,8 +17,7 @@ WORKDIR /app/server
 RUN npm install --production=false
 
 # Copia o restante do código do backend e o schema do Prisma
-WORKDIR /app
-COPY server ./server
+COPY . .
 
 # Gera o Prisma Client
 WORKDIR /app/server
@@ -31,6 +29,8 @@ RUN if [ "$RAILWAY" = "true" ]; then npx prisma migrate deploy --schema=prisma/s
 # Compila o TypeScript
 RUN npm run build
 
+# Exponha a porta da API
 EXPOSE 4000
 
-CMD ["npm", "start"]
+# Comando para rodar a aplicação
+CMD ["npm", "start"] 
