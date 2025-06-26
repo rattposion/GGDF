@@ -96,4 +96,28 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
+});
+
+// Handlers de WebSocket para chat em tempo real
+io.on('connection', (socket) => {
+  // Entrar em uma sala específica do pedido
+  socket.on('join', (orderId) => {
+    socket.join(orderId);
+  });
+
+  // Receber mensagem do chat e repassar para todos na sala
+  socket.on('chat:send', (data) => {
+    // data: { orderId, message, type }
+    // Aqui você pode salvar no banco se quiser (opcional)
+    io.to(data.orderId).emit('chat:receive', {
+      ...data,
+      senderId: socket.handshake.auth?.userId || 'user', // ajuste conforme autenticação
+      createdAt: new Date().toISOString(),
+    });
+  });
+
+  // (Opcional) Desconectar
+  socket.on('disconnect', () => {
+    // console.log('Usuário desconectado');
+  });
 }); 
