@@ -4,6 +4,7 @@ import passport from 'passport';
 import { generateJWT } from '../steam';
 import { authenticate } from '../middlewares/auth.middleware';
 import { getUserReviews } from '../controllers/review.controller';
+import { ParsedQs } from 'qs';
 
 const router = Router();
 
@@ -19,8 +20,14 @@ router.post('/login', login);
 
 // Login Steam
 router.get('/steam', (req, res, next) => {
-  // Salva o token JWT da query na sessão
-  if (req.query.token) req.session.jwt = req.query.token;
+  // Salva o token JWT da query na sessão, garantindo que seja string
+  let token: string | undefined;
+  if (typeof req.query.token === 'string') {
+    token = req.query.token;
+  } else if (Array.isArray(req.query.token)) {
+    token = req.query.token[0];
+  }
+  if (token) req.session.jwt = token;
   passport.authenticate('steam', { failureRedirect: '/' })(req, res, next);
 });
 router.get('/steam/return', passport.authenticate('steam', { failureRedirect: '/' }), (req, res) => {
