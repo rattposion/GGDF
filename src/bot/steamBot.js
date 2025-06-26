@@ -3,6 +3,7 @@ const SteamUser = require('steam-user');
 const SteamCommunity = require('steamcommunity');
 const TradeOfferManager = require('steam-tradeoffer-manager');
 const prisma = require('../prisma');
+const SteamTotp = require('steam-totp');
 
 const client = new SteamUser();
 const community = new SteamCommunity();
@@ -23,7 +24,7 @@ function login() {
   client.logOn({
     accountName: BOT_USERNAME,
     password: BOT_PASSWORD,
-    twoFactorCode: SteamUser.generateAuthCode(BOT_SHARED_SECRET),
+    twoFactorCode: SteamTotp.generateAuthCode(BOT_SHARED_SECRET),
   });
 }
 
