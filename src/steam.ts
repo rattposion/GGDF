@@ -6,6 +6,10 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 
+console.log('STEAM_API_KEY:', process.env.STEAM_API_KEY);
+console.log('STEAM_RETURN_URL:', process.env.STEAM_RETURN_URL);
+console.log('STEAM_REALM:', process.env.STEAM_REALM);
+
 passport.use(new SteamStrategy({
   returnURL: process.env.STEAM_RETURN_URL || 'http://localhost:4000/api/auth/steam/return',
   realm: process.env.STEAM_REALM || 'http://localhost:4000/',
