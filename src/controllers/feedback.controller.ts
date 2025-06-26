@@ -58,13 +58,41 @@ export const getUserReputation = async (req: Request, res: Response) => {
     const negativos = feedbacks.filter(f => f.rating <= 2).length;
     const media = total > 0 ? (feedbacks.reduce((acc, f) => acc + f.rating, 0) / total) : 0;
     const percentualPositivo = total > 0 ? (positivos / total) * 100 : 0;
-    // Níveis
-    let nivel = 'Bronze';
-    if (total >= 201) nivel = 'Ouro';
-    else if (total >= 51) nivel = 'Prata';
-    if (total >= 500) nivel = 'Diamante';
-    if (percentualPositivo >= 98 && total >= 1000) nivel = 'Vendedor Certificado';
-    res.json({ total, positivos, neutros, negativos, media, percentualPositivo, nivel });
+
+    // Buscar dados extras do usuário
+    const user = await prisma.user.findUnique({ where: { id } });
+    const vendas = user?.totalSales || 0;
+    const kyc = user?.kyc || false;
+    const twofa = user?.twofa || false;
+    // Buscar disputas dos últimos 6 meses
+    const seisMesesAtras = new Date();
+    seisMesesAtras.setMonth(seisMesesAtras.getMonth() - 6);
+    const disputasRecentes = await prisma.dispute.count({
+      where: {
+        OR: [
+          { order: { sellerId: id } },
+          { order: { buyerId: id } }
+        ],
+        createdAt: { gte: seisMesesAtras },
+        status: { not: 'resolved' }
+      }
+    });
+    const semDisputas = disputasRecentes === 0;
+
+    // Lógica de rank
+    let nivel = 'Sem Rank';
+    let progresso = 0;
+    if (vendas >= 10000 && percentualPositivo >= 98 && semDisputas) { nivel = 'Elite'; progresso = 100; }
+    else if (vendas >= 5001 && percentualPositivo >= 97) { nivel = 'Diamante'; progresso = Math.min(100, vendas / 10000 * 100); }
+    else if (vendas >= 1001 && percentualPositivo >= 95) { nivel = 'Platina'; progresso = Math.min(100, vendas / 5001 * 100); }
+    else if (vendas >= 501 && percentualPositivo >= 92) { nivel = 'Ouro'; progresso = Math.min(100, vendas / 1001 * 100); }
+    else if (vendas >= 101 && percentualPositivo >= 90) { nivel = 'Prata'; progresso = Math.min(100, vendas / 501 * 100); }
+    else if (vendas >= 21 && percentualPositivo >= 85) { nivel = 'Bronze'; progresso = Math.min(100, vendas / 101 * 100); }
+    else if (vendas >= 0 && percentualPositivo >= 80) { nivel = 'Iniciante'; progresso = Math.min(100, vendas / 21 * 100); }
+
+    const isVerifiedRank = !!(kyc && twofa);
+
+    return res.json({ total, positivos, neutros, negativos, media, percentualPositivo, nivel, isVerifiedRank, progresso });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao calcular reputação.' });
   }

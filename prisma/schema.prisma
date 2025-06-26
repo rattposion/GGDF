@@ -40,6 +40,9 @@ model User {
   pix          String?
   logs         Log[]
   affiliates   Affiliate[]
+  feedbacksGiven     Feedback[] @relation("FeedbackFromUser")
+  feedbacksReceived  Feedback[] @relation("FeedbackToUser")
+  feedbacksReported  Feedback[] @relation("FeedbackReportedBy")
 }
 
 model Category {
@@ -59,6 +62,9 @@ model Subcategory {
   category     Category @relation(fields: [categoryId], references: [id])
   categoryId   String
   products     Product[]
+  emoji        String?  // Emoji representando a subcategoria
+
+  @@unique([name, categoryId])
 }
 
 model Product {
@@ -141,6 +147,7 @@ model Order {
   completedAt  DateTime?
   chatMessages ChatMessage[]
   dispute      Dispute?
+  feedbacks    Feedback[]
 }
 
 model Notification {
@@ -307,4 +314,22 @@ model AdminMessage {
   text      String
   date      String
   createdAt DateTime   @default(now())
+}
+
+model Feedback {
+  id           String   @id @default(uuid())
+  order        Order    @relation(fields: [orderId], references: [id])
+  orderId      String
+  fromUser     User     @relation("FeedbackFromUser", fields: [fromUserId], references: [id])
+  fromUserId   String
+  toUser       User     @relation("FeedbackToUser", fields: [toUserId], references: [id])
+  toUserId     String
+  rating       Int      // 1-5 estrelas
+  type         String   // positivo, neutro, negativo (derivado do rating)
+  comment      String
+  createdAt    DateTime @default(now())
+  status       String   @default("active") // active, reported, removed
+  reportedBy   User?    @relation("FeedbackReportedBy", fields: [reportedById], references: [id])
+  reportedById String?
+  isAutomatic  Boolean  @default(false)
 } 
