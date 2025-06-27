@@ -28,6 +28,18 @@ router.get('/discord/return', passport.authenticate('discord', { failureRedirect
   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?token=${token}`);
 });
 
+// Endpoint de callback Discord
+router.get('/auth/discord/return', passport.authenticate('discord', { session: false }), (req, res) => {
+  const { token } = req.user as any;
+  res.redirect(`http://localhost:5173/auth/link/discord/callback?token=${token}`);
+});
+
+// Endpoint de callback Steam
+router.get('/auth/steam/return', passport.authenticate('steam', { session: false }), (req, res) => {
+  const { token } = req.user as any;
+  res.redirect(`http://localhost:5173/auth/link/steam/callback?token=${token}`);
+});
+
 router.get('/users/me', authenticate, getMe);
 router.put('/users/me', authenticate, updateProfile);
 router.post('/users/me/2fa', authenticate, toggle2FA);
