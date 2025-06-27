@@ -8,12 +8,7 @@ declare module 'express-session' {
 }
 
 declare module 'express' {
-  interface User {
-    id: string;
-    // Adicione outros campos conforme necessário
-  }
   interface Request {
-    user?: User;
     session?: any;
   }
 } 

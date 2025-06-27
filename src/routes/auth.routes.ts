@@ -38,7 +38,7 @@ router.get('/steam', (req: Request, res: Response, next: NextFunction) => {
 });
 
 router.get('/steam/return', passport.authenticate('steam', { failureRedirect: '/' }), (req: Request, res: Response) => {
-  const user = req.user as any; // use interface se quiser maior controle
+  const user = req.user as any; // Garantir compatibilidade de tipos
   const token = generateJWT(user);
   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?token=${token}`);
 });
@@ -47,7 +47,7 @@ router.get('/steam/return', passport.authenticate('steam', { failureRedirect: '/
 router.get('/discord', passport.authenticate('discord', { scope: ['identify', 'email'], failureRedirect: '/' }));
 
 router.get('/discord/return', passport.authenticate('discord', { failureRedirect: '/' }), (req: Request, res: Response) => {
-  const user = req.user as any;
+  const user = req.user as any; // Garantir compatibilidade de tipos
   const token = generateJWT(user);
   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?token=${token}`);
 });
