@@ -13,8 +13,9 @@ console.log('STEAM_REALM:', process.env.STEAM_REALM);
 passport.use(new SteamStrategy({
   returnURL: process.env.STEAM_RETURN_URL || 'http://localhost:4000/api/auth/steam/return',
   realm: process.env.STEAM_REALM || 'http://localhost:4000/',
-  apiKey: process.env.STEAM_API_KEY || 'SUA_STEAM_API_KEY'
-}, async function(identifier: string, profile: any, done: (err: any, user?: any) => void, req?: any) {
+  apiKey: process.env.STEAM_API_KEY || 'SUA_STEAM_API_KEY',
+  passReqToCallback: true
+}, async function(req: any, identifier: string, profile: any, done: (err: any, user?: any) => void) {
   try {
     let user;
     let avatarUrl = profile.photos?.[2]?.value || profile.photos?.[0]?.value || '/steam.svg';
@@ -73,8 +74,9 @@ passport.use(new DiscordStrategy({
   clientID: process.env.DISCORD_CLIENT_ID || '',
   clientSecret: process.env.DISCORD_CLIENT_SECRET || '',
   callbackURL: process.env.DISCORD_CALLBACK_URL || 'http://localhost:4000/api/auth/discord/return',
-  scope: ['identify', 'email']
-}, async function(accessToken: string, refreshToken: string, profile: any, done: (err: any, user?: any) => void, req?: any) {
+  scope: ['identify', 'email'],
+  passReqToCallback: true
+}, async function(req: any, accessToken: string, refreshToken: string, profile: any, done: (err: any, user?: any) => void) {
   try {
     let user;
     let avatarUrl = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : '/discord.svg';
