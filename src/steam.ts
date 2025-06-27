@@ -43,7 +43,7 @@ passport.use(new SteamStrategy({
       }
     });
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    return done(null, false, { message: 'redirect', redirectUrl: `http://localhost:5173/auth/link/steam/callback?token=${token}` });
+    return done(null, { id: user.id, token });
   } catch (err) {
     console.error('Erro no login Steam:', err);
     return done(err);
@@ -86,7 +86,7 @@ passport.use(new DiscordStrategy({
       }
     });
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    return done(null, false, { message: 'redirect', redirectUrl: `http://localhost:5173/auth/link/discord/callback?token=${token}` });
+    return done(null, { id: user.id, token });
   } catch (err) {
     console.error('Erro no login Discord:', err);
     return done(err);
