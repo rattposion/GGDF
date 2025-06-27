@@ -63,7 +63,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 // Retorna o usuário autenticado
 export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('[getMe] Início da requisição');
     const userId = (req as any).userId;
+    console.log(`[getMe] userId extraído do token:`, userId);
     const user = await prisma.user.findUnique({ 
       where: { id: userId },
       select: {
@@ -84,12 +86,15 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         discordAvatar: true
       }
     });
+    console.log('[getMe] Resultado da busca no banco:', user);
     if (!user) {
+      console.log('[getMe] Usuário não encontrado para o userId:', userId);
       res.status(404).json({ error: 'Usuário não encontrado.' });
       return;
     }
     res.json({ id: user.id, username: user.username, email: user.email, avatar: user.avatar, steamId: user.steamId, balance: user.balance, rating: user.rating, totalSales: user.totalSales, joinDate: user.joinDate, isVerified: user.isVerified, isBanned: user.isBanned, isAdmin: user.isAdmin, discordId: user.discordId, discordUsername: user.discordUsername, discordAvatar: user.discordAvatar });
   } catch (err) {
+    console.error('[getMe] Erro ao buscar usuário:', err);
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
   }
 };
