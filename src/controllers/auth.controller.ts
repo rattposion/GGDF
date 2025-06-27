@@ -5,15 +5,17 @@ import prisma from '../prisma';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
-      return res.status(400).json({ error: 'Preencha todos os campos.' });
+      res.status(400).json({ error: 'Preencha todos os campos.' });
+      return;
     }
     const existing = await prisma.user.findFirst({ where: { OR: [{ email }, { username }] } });
     if (existing) {
-      return res.status(400).json({ error: 'Usuário ou e-mail já cadastrado.' });
+      res.status(400).json({ error: 'Usuário ou e-mail já cadastrado.' });
+      return;
     }
     const hash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
@@ -27,11 +29,12 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { identifier, password } = req.body;
     if (!identifier || !password) {
-      return res.status(400).json({ error: 'Preencha todos os campos.' });
+      res.status(400).json({ error: 'Preencha todos os campos.' });
+      return;
     }
     const user = await prisma.user.findFirst({
       where: {
@@ -42,11 +45,13 @@ export const login = async (req: Request, res: Response) => {
       }
     });
     if (!user) {
-      return res.status(400).json({ error: 'Usuário não encontrado.' });
+      res.status(400).json({ error: 'Usuário não encontrado.' });
+      return;
     }
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      return res.status(400).json({ error: 'Senha incorreta.' });
+      res.status(400).json({ error: 'Senha incorreta.' });
+      return;
     }
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ user: { id: user.id, username: user.username, email: user.email }, token });
@@ -56,7 +61,7 @@ export const login = async (req: Request, res: Response) => {
 };
 
 // Retorna o usuário autenticado
-export const getMe = async (req: Request, res: Response) => {
+export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
     const user = await prisma.user.findUnique({ 
@@ -79,7 +84,10 @@ export const getMe = async (req: Request, res: Response) => {
         discordAvatar: true
       }
     });
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
     res.json({ id: user.id, username: user.username, email: user.email, avatar: user.avatar, steamId: user.steamId, balance: user.balance, rating: user.rating, totalSales: user.totalSales, joinDate: user.joinDate, isVerified: user.isVerified, isBanned: user.isBanned, isAdmin: user.isAdmin, discordId: user.discordId, discordUsername: user.discordUsername, discordAvatar: user.discordAvatar });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
@@ -87,7 +95,7 @@ export const getMe = async (req: Request, res: Response) => {
 };
 
 // Atualizar perfil do usuário
-export const updateProfile = async (req: Request, res: Response) => {
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
     const { username, email, avatar } = req.body;
@@ -102,7 +110,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 };
 
 // Ativar/desativar 2FA (mock)
-export const toggle2FA = async (req: Request, res: Response) => {
+export const toggle2FA = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
     const { enabled } = req.body;
@@ -117,14 +125,20 @@ export const toggle2FA = async (req: Request, res: Response) => {
 };
 
 // Alterar senha
-export const changePassword = async (req: Request, res: Response) => {
+export const changePassword = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
     const { oldPassword, newPassword } = req.body;
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
     const valid = await bcrypt.compare(oldPassword, user.password);
-    if (!valid) return res.status(400).json({ error: 'Senha atual incorreta.' });
+    if (!valid) {
+      res.status(400).json({ error: 'Senha atual incorreta.' });
+      return;
+    }
     const hash = await bcrypt.hash(newPassword, 10);
     await prisma.user.update({ where: { id: userId }, data: { password: hash } });
     res.json({ success: true });
@@ -134,7 +148,7 @@ export const changePassword = async (req: Request, res: Response) => {
 };
 
 // Deletar conta
-export const deleteAccount = async (req: Request, res: Response) => {
+export const deleteAccount = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
     await prisma.user.delete({ where: { id: userId } });
@@ -145,7 +159,7 @@ export const deleteAccount = async (req: Request, res: Response) => {
 };
 
 // Upload de documento (KYC) - mock
-export const uploadKYC = async (req: Request, res: Response) => {
+export const uploadKYC = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
     // Aqui você pode salvar o arquivo e atualizar o campo kyc/documento
@@ -157,7 +171,7 @@ export const uploadKYC = async (req: Request, res: Response) => {
 };
 
 // Atualizar chave Pix
-export const updatePix = async (req: Request, res: Response) => {
+export const updatePix = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).userId;
     const { pix } = req.body;
