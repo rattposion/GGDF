@@ -13,16 +13,19 @@ passport.use(new SteamStrategy({
   apiKey: process.env.STEAM_API_KEY || 'SUA_STEAM_API_KEY'
 }, async (identifier: string, profile: any, done: (err: any, user?: any) => void) => {
   try {
+    console.log('[SteamStrategy] Início do login social Steam', { identifier, steamId: profile.id });
     // Verifica se já existe vínculo para essa Steam
     const existing = await prisma.socialLink.findUnique({ where: { provider_providerId: { provider: 'steam', providerId: profile.id } } });
     if (existing) {
       // Busca o usuário vinculado
       const user = await prisma.user.findUnique({ where: { id: existing.userId } });
+      console.log('[SteamStrategy] Usuário já vinculado encontrado:', user?.id);
       return done(null, user);
     }
     // Recupera o token JWT da sessão
     const token = profile.req?.session?.jwt;
     if (!token) {
+      console.error('[SteamStrategy] Token de autenticação não encontrado na sessão');
       return done(new Error('Token de autenticação não encontrado. Faça login com Discord antes de vincular Steam.'));
     }
     let userId;
@@ -33,15 +36,17 @@ passport.use(new SteamStrategy({
       } else if (typeof decoded === 'object' && decoded && 'id' in decoded) {
         userId = (decoded as any).id;
       } else {
+        console.error('[SteamStrategy] Token JWT inválido:', decoded);
         return done(new Error('Token inválido. Faça login novamente.'));
       }
-    } catch {
+    } catch (err) {
+      console.error('[SteamStrategy] Erro ao decodificar token JWT:', err);
       return done(new Error('Token inválido. Faça login novamente.'));
     }
     // Busca ou cria o usuário na tabela User
     let user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-      // Cria usuário mínimo (pode ser expandido conforme necessário)
+      console.log('[SteamStrategy] Usuário não encontrado, criando novo usuário:', userId);
       user = await prisma.user.create({
         data: {
           id: userId,
@@ -51,13 +56,15 @@ passport.use(new SteamStrategy({
           steamId: profile.id,
         }
       });
+      console.log('[SteamStrategy] Novo usuário criado:', user.id);
     } else if (!user.steamId) {
-      // Atualiza steamId se não estiver setado
       await prisma.user.update({ where: { id: userId }, data: { steamId: profile.id } });
+      console.log('[SteamStrategy] steamId atualizado para usuário existente:', userId);
     }
     // Verifica se já existe vínculo para esse Discord
     const existingDiscord = await prisma.socialLink.findUnique({ where: { provider_providerId: { provider: 'discord', providerId: userId } } });
     if (existingDiscord) {
+      console.error('[SteamStrategy] Discord já vinculado a outro usuário:', userId);
       return done(new Error('Este Discord já está vinculado a uma conta Steam.'));
     }
     // Cria o vínculo
@@ -68,10 +75,11 @@ passport.use(new SteamStrategy({
         providerId: profile.id
       }
     });
+    console.log('[SteamStrategy] Vínculo Steam criado com sucesso para usuário:', user.id);
     // Opcional: atualizar avatar/nome do usuário, se desejar
-    // const user = await prisma.user.findUnique({ where: { id: userId } });
     return done(null, user);
   } catch (err: any) {
+    console.error('[SteamStrategy] Erro inesperado no login social:', err);
     if (err.code === 'P2021' || (err.message && err.message.includes('does not exist'))) {
       return done(new Error('Erro interno: tabela de vínculo social não encontrada. Contate o suporte.'));
     }
