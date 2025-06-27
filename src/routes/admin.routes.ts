@@ -132,5 +132,24 @@ router.post('/admin-chats', authenticate, createAdminChat);
 router.post('/admin-chats/:chatId/messages', authenticate, sendAdminMessage);
 router.get('/dashboard', authenticate, getDashboard);
 router.put('/products/:productId/highlight', authenticate, highlightProduct);
+router.get('/social-accounts', authenticate, async (req, res) => {
+  try {
+    const accounts = await prisma.socialAccount.findMany({
+      include: { user: { select: { id: true, username: true, email: true } } },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(accounts);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar contas sociais.' });
+  }
+});
+router.get('/link-logs', authenticate, async (req, res) => {
+  try {
+    const logs = await prisma.linkLog.findMany({ orderBy: { createdAt: 'desc' } });
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar logs de vinculação.' });
+  }
+});
 
 export default router; 

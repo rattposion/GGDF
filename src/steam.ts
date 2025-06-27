@@ -25,26 +25,18 @@
           ]
         }
       });
-      let steamAvatar = profile.photos?.[2]?.value || profile.photos?.[0]?.value;
-      if (!steamAvatar) {
-        steamAvatar = '/steam.svg';
-      }
-      console.log('Steam avatar:', steamAvatar);
+      let avatarUrl = profile.photos?.[2]?.value || profile.photos?.[0]?.value || '/steam.svg';
       if (!user) {
-        // Antes de criar, verifique se já existe usuário com esse email
         let existingEmail = null;
         if (profile.email) {
           existingEmail = await prisma.user.findUnique({ where: { email: profile.email } });
         }
         if (existingEmail) {
-          // Atualiza apenas os campos de Steam
           user = await prisma.user.update({
             where: { id: existingEmail.id },
             data: {
               steamId: profile.id,
-              steamUsername: profile.displayName,
-              steamAvatar: steamAvatar,
-              avatar: steamAvatar,
+              avatarUrl: avatarUrl,
             }
           });
         } else {
@@ -52,11 +44,9 @@
             data: {
               username: profile.displayName,
               steamId: profile.id,
-              steamUsername: profile.displayName,
-              steamAvatar: steamAvatar,
+              avatarUrl: avatarUrl,
               email: `${profile.id}@steamcommunity.com`,
               password: 'social_login',
-              avatar: steamAvatar,
               isVerified: true,
             }
           });
@@ -66,13 +56,11 @@
           where: { id: user.id },
           data: {
             steamId: profile.id,
-            steamUsername: profile.displayName,
-            steamAvatar: steamAvatar,
-            avatar: steamAvatar,
+            avatarUrl: avatarUrl,
           }
         });
       }
-      return done(null, user);
+      return done(null, { id: user.id, steamId: user.steamId });
     } catch (err) {
       console.error('Erro no login Steam:', err);
       return done(err);
@@ -95,23 +83,15 @@
           ]
         }
       });
-      let discordAvatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : undefined;
-      if (!discordAvatar) {
-        discordAvatar = '/discord.svg';
-      }
-      console.log('Discord avatar:', discordAvatar);
+      let avatarUrl = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : '/discord.svg';
       if (!user) {
-        // Antes de criar, verifique se já existe usuário com esse email
         const existingEmail = await prisma.user.findUnique({ where: { email: profile.email } });
         if (existingEmail) {
-          // Atualiza apenas os campos de Discord
           user = await prisma.user.update({
             where: { id: existingEmail.id },
             data: {
               discordId: profile.id,
-              discordUsername: profile.username,
-              discordAvatar: discordAvatar,
-              avatar: discordAvatar,
+              avatarUrl: avatarUrl,
             }
           });
         } else {
@@ -119,11 +99,9 @@
             data: {
               username: profile.username,
               discordId: profile.id,
-              discordUsername: profile.username,
-              discordAvatar: discordAvatar,
+              avatarUrl: avatarUrl,
               email: profile.email || `${profile.id}@discord.com`,
               password: 'social_login',
-              avatar: discordAvatar,
               isVerified: true,
             }
           });
@@ -133,13 +111,11 @@
           where: { id: user.id },
           data: {
             discordId: profile.id,
-            discordUsername: profile.username,
-            discordAvatar: discordAvatar,
-            avatar: discordAvatar,
+            avatarUrl: avatarUrl,
           }
         });
       }
-      return done(null, user);
+      return done(null, { id: user.id, discordId: user.discordId });
     } catch (err) {
       console.error('Erro no login Discord:', err);
       return done(err);

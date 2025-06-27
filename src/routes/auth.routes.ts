@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, getMe, updateProfile, toggle2FA, changePassword, deleteAccount, uploadKYC, updatePix, unlinkSteam, unlinkDiscord } from '../controllers/auth.controller';
+import { register, login, getMe, updateProfile, toggle2FA, changePassword, deleteAccount, uploadKYC, updatePix, unlinkSteam, unlinkDiscord, linkSteam, linkDiscord, linkSteamCallback, linkDiscordCallback, linkSocialAccount, unlinkSocialAccount } from '../controllers/auth.controller';
 import passport from 'passport';
 import { generateJWT } from '../steam';
 import { authenticate } from '../middlewares/auth.middleware';
@@ -38,5 +38,15 @@ router.put('/users/me/pix', authenticate, updatePix);
 router.get('/users/me/reviews', authenticate, getUserReviews);
 router.delete('/unlink/steam', authenticate, unlinkSteam);
 router.delete('/unlink/discord', authenticate, unlinkDiscord);
+
+// Rotas de vinculação de contas externas
+router.get('/link/steam', authenticate, linkSteam);
+router.get('/link/discord', authenticate, linkDiscord);
+router.get('/link/callback/steam', authenticate, linkSteamCallback);
+router.get('/link/callback/discord', authenticate, linkDiscordCallback);
+
+// Rotas REST para vinculação/desvinculação genérica
+router.post('/link/:provider', authenticate, linkSocialAccount);
+router.delete('/unlink/:provider', authenticate, unlinkSocialAccount);
 
 export default router; 
