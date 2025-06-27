@@ -92,7 +92,7 @@ passport.use(new DiscordStrategy({
       if (!user) {
         user = await prisma.user.create({
           data: {
-            username: profile.username,
+            username: profile.username || `discord_${profile.id}`,
             email,
             password: 'social_login',
             avatarUrl,
