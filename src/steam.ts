@@ -97,15 +97,33 @@ passport.use(new DiscordStrategy({
     // Verifica se já existe vínculo para esse Discord
     const existing = await prisma.socialLink.findUnique({ where: { provider_providerId: { provider: 'discord', providerId: profile.id } } });
     if (existing) {
-      return done(new Error('Esta conta Discord já está vinculada a uma conta Steam.'));
+      // Busca o usuário vinculado
+      const user = await prisma.user.findUnique({ where: { id: existing.userId } });
+      return done(null, user);
     }
-    // Aqui você deve obter o steamId do usuário logado, se desejar permitir o fluxo inverso
-    // Exemplo: const steamId = profile.req?.user?.steamId;
-    // Se quiser permitir criar vínculo só pelo Discord, pode criar o vínculo vazio e permitir completar depois
-    // await prisma.socialLink.create({ data: { userId: profile.id, provider: 'discord', providerId: null } });
-    // ...
-    // Para este exemplo, só permite criar vínculo se já houver Steam logada
-    return done(null, { id: profile.id, username: profile.username, discordUsername: profile.username, discordAvatar: profile.avatar });
+    // Busca ou cria o usuário na tabela User
+    let user = await prisma.user.findFirst({ where: { discordId: profile.id } });
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          username: profile.username || `discord_${profile.id}`,
+          email: profile.email || `${profile.id}@discord.local`,
+          password: await bcrypt.hash(Math.random().toString(36), 10),
+          discordId: profile.id,
+          discordUsername: profile.username,
+          discordAvatar: profile.avatar,
+        }
+      });
+    }
+    // Cria o vínculo
+    await prisma.socialLink.create({
+      data: {
+        userId: user.id,
+        provider: 'discord',
+        providerId: profile.id
+      }
+    });
+    return done(null, user);
   } catch (err: any) {
     if (err.code === 'P2021' || (err.message && err.message.includes('does not exist'))) {
       return done(new Error('Erro interno: tabela de vínculo social não encontrada. Contate o suporte.'));
