@@ -40,7 +40,7 @@ export const listUserFeedbacks = async (req: Request, res: Response) => {
     const feedbacks = await prisma.feedback.findMany({
       where: { toUserId: id },
       orderBy: { createdAt: 'desc' },
-      include: { fromUser: { select: { id: true, username: true, avatar: true } }, order: true }
+      include: { fromUser: { select: { id: true, username: true, avatarUrl: true } }, order: true }
     });
     res.json(feedbacks);
   } catch (err) {

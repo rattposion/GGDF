@@ -67,7 +67,7 @@ export const getMe = async (req: Request, res: Response) => {
         id: true,
         username: true,
         email: true,
-        avatar: true,
+        avatarUrl: true,
         balance: true,
         rating: true,
         totalSales: true,
@@ -95,12 +95,12 @@ export const getMe = async (req: Request, res: Response) => {
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
-    const { username, email, avatar } = req.body;
+    const { username, email, avatarUrl } = req.body;
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { username, email, avatar }
+      data: { username, email, avatarUrl }
     });
-    res.json({ id: user.id, username: user.username, email: user.email, avatar: user.avatar });
+    res.json({ id: user.id, username: user.username, email: user.email, avatarUrl: user.avatarUrl });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar perfil.' });
   }

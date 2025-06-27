@@ -115,7 +115,7 @@ export const getProductQuestions = async (req: Request, res: Response) => {
     const { id } = req.params;
     const questions = await prisma.question.findMany({
       where: { productId: id },
-      include: { user: { select: { id: true, username: true, avatar: true } } },
+      include: { user: { select: { id: true, username: true, avatarUrl: true } } },
       orderBy: { createdAt: 'desc' }
     });
     res.json(questions);
@@ -129,7 +129,7 @@ export const getProductReviews = async (req: Request, res: Response) => {
     const { id } = req.params;
     const reviews = await prisma.review.findMany({
       where: { productId: id },
-      include: { buyer: { select: { id: true, username: true, avatar: true } } },
+      include: { buyer: { select: { id: true, username: true, avatarUrl: true } } },
       orderBy: { createdAt: 'desc' }
     });
     res.json(reviews);
