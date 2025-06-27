@@ -103,13 +103,17 @@ passport.use(new DiscordStrategy({
         user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
       }
     }
+    let providerId = profile.id;
+    if (!providerId) {
+      return done(new Error('Discord profile.id não retornado. Não é possível vincular conta.'));
+    }
     await prisma.socialAccount.upsert({
-      where: { provider_providerId: { provider: 'discord', providerId: profile.id } },
+      where: { provider_providerId: { provider: 'discord', providerId } },
       update: { userId: user.id, accessToken, refreshToken },
       create: {
         userId: user.id,
         provider: 'discord',
-        providerId: profile.id,
+        providerId,
         accessToken,
         refreshToken
       }
