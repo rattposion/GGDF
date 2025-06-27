@@ -67,10 +67,11 @@ router.get('/auth/steam/return', passport.authenticate('steam', { session: false
   } catch {
     return res.redirect('http://localhost:5173/auth/link/steam/callback?error=invalidtoken');
   }
-  if (!req.user || typeof req.user !== 'object' || !('id' in req.user)) {
-    return res.redirect('http://localhost:5173/auth/link/steam/callback?error=nouser');
+  // Pega o providerId do social (do req.user, que é o profile social, não o usuário do sistema)
+  const providerId = (req.user as any)?.id || (req.account as any)?.id;
+  if (!providerId) {
+    return res.redirect('http://localhost:5173/auth/link/steam/callback?error=noproviderid');
   }
-  const providerId = (req.user as any).id;
   await prisma.socialAccount.upsert({
     where: { provider_providerId: { provider: 'steam', providerId } },
     update: { userId },
@@ -94,10 +95,11 @@ router.get('/auth/discord/return', passport.authenticate('discord', { session: f
   } catch {
     return res.redirect('http://localhost:5173/auth/link/discord/callback?error=invalidtoken');
   }
-  if (!req.user || typeof req.user !== 'object' || !('id' in req.user)) {
-    return res.redirect('http://localhost:5173/auth/link/discord/callback?error=nouser');
+  // Pega o providerId do social (do req.user, que é o profile social, não o usuário do sistema)
+  const providerId = (req.user as any)?.id || (req.account as any)?.id;
+  if (!providerId) {
+    return res.redirect('http://localhost:5173/auth/link/discord/callback?error=noproviderid');
   }
-  const providerId = (req.user as any).id;
   await prisma.socialAccount.upsert({
     where: { provider_providerId: { provider: 'discord', providerId } },
     update: { userId },
