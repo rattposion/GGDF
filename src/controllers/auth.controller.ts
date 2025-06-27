@@ -67,13 +67,10 @@ export const getMe = async (req: Request, res: Response) => {
         id: true,
         username: true,
         email: true,
-        avatarUrl: true,
-        steamId: true,
-        discordId: true,
+        avatar: true,
         balance: true,
         rating: true,
         totalSales: true,
-        createdAt: true,
         isVerified: true,
         isBanned: true,
         isAdmin: true,
@@ -98,12 +95,12 @@ export const getMe = async (req: Request, res: Response) => {
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
-    const { username, email, avatarUrl } = req.body;
+    const { username, email, avatar } = req.body;
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { username, email, avatarUrl }
+      data: { username, email, avatar }
     });
-    res.json({ id: user.id, username: user.username, email: user.email, avatarUrl: user.avatarUrl });
+    res.json({ id: user.id, username: user.username, email: user.email, avatar: user.avatar });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar perfil.' });
   }
@@ -173,48 +170,6 @@ export const updatePix = async (req: Request, res: Response) => {
     res.json({ pix: user.pix });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao atualizar chave Pix.' });
-  }
-};
-
-// Desvincular Steam
-export const unlinkSteam = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).userId;
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-    // Não permitir desvincular se não houver outro método de login
-    const hasOtherLogin = (user.email && user.password !== 'social_login') || user.discordId;
-    if (!hasOtherLogin) {
-      return res.status(400).json({ error: 'Não é possível desvincular a Steam. Você precisa ter outro método de login (email/senha ou Discord) vinculado.' });
-    }
-    await prisma.user.update({
-      where: { id: userId },
-      data: { steamId: null }
-    });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao desvincular Steam.' });
-  }
-};
-
-// Desvincular Discord
-export const unlinkDiscord = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).userId;
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
-    // Não permitir desvincular se não houver outro método de login
-    const hasOtherLogin = (user.email && user.password !== 'social_login') || user.steamId;
-    if (!hasOtherLogin) {
-      return res.status(400).json({ error: 'Não é possível desvincular o Discord. Você precisa ter outro método de login (email/senha ou Steam) vinculado.' });
-    }
-    await prisma.user.update({
-      where: { id: userId },
-      data: { discordId: null }
-    });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Erro ao desvincular Discord.' });
   }
 };
 
