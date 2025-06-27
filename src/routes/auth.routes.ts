@@ -4,8 +4,13 @@ import passport from 'passport';
 import { generateJWT } from '../steam';
 import { authenticate } from '../middlewares/auth.middleware';
 import { getUserReviews } from '../controllers/review.controller';
+import { JWT_SECRET } from '../config';
+import jwt from 'jsonwebtoken';
+import { prisma } from '../db';
 
 const router = Router();
+const cookieParser = require('cookie-parser');
+router.use(cookieParser());
 
 router.post('/register', register);
 router.post('/login', login);
@@ -28,16 +33,64 @@ router.get('/discord/return', passport.authenticate('discord', { failureRedirect
   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?token=${token}`);
 });
 
-// Endpoint de callback Discord
-router.get('/auth/discord/return', passport.authenticate('discord', { session: false }), (req, res) => {
-  const { token } = req.user as any;
-  res.redirect(`http://localhost:5173/auth/link/discord/callback?token=${token}`);
+// Steam OAuth - salvar token em cookie
+router.get('/auth/steam', (req, res, next) => {
+  const { token } = req.query;
+  if (token) {
+    res.cookie('link_jwt', token, { httpOnly: true, sameSite: 'lax' });
+  }
+  next();
+}, passport.authenticate('steam', { session: false }));
+
+// Discord OAuth - salvar token em cookie
+router.get('/auth/discord', (req, res, next) => {
+  const { token } = req.query;
+  if (token) {
+    res.cookie('link_jwt', token, { httpOnly: true, sameSite: 'lax' });
+  }
+  next();
+}, passport.authenticate('discord', { session: false }));
+
+// Steam callback - associar SocialAccount ao userId do token
+router.get('/auth/steam/return', passport.authenticate('steam', { session: false }), async (req, res) => {
+  const token = req.cookies.link_jwt;
+  res.clearCookie('link_jwt');
+  if (!token) return res.redirect('http://localhost:5173/auth/link/steam/callback?error=notoken');
+  let userId;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.id;
+  } catch {
+    return res.redirect('http://localhost:5173/auth/link/steam/callback?error=invalidtoken');
+  }
+  // Associe a conta social ao userId
+  await prisma.socialAccount.upsert({
+    where: { provider_providerId: { provider: 'steam', providerId: req.user.id } },
+    update: { userId },
+    create: { userId, provider: 'steam', providerId: req.user.id }
+  });
+  return res.redirect('http://localhost:5173/auth/link/steam/callback?success=1');
 });
 
-// Endpoint de callback Steam
-router.get('/auth/steam/return', passport.authenticate('steam', { session: false }), (req, res) => {
-  const { token } = req.user as any;
-  res.redirect(`http://localhost:5173/auth/link/steam/callback?token=${token}`);
+// Discord callback - associar SocialAccount ao userId do token
+router.get('/auth/discord/return', passport.authenticate('discord', { session: false }), async (req, res) => {
+  const token = req.cookies.link_jwt;
+  res.clearCookie('link_jwt');
+  if (!token) return res.redirect('http://localhost:5173/auth/link/discord/callback?error=notoken');
+  let userId;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    userId = decoded.id;
+  } catch {
+    return res.redirect('http://localhost:5173/auth/link/discord/callback?error=invalidtoken');
+  }
+  // Associe a conta social ao userId
+  await prisma.socialAccount.upsert({
+    where: { provider_providerId: { provider: 'discord', providerId: req.user.id } },
+    update: { userId },
+    create: { userId, provider: 'discord', providerId: req.user.id }
+  });
+  return res.redirect('http://localhost:5173/auth/link/discord/callback?success=1');
 });
 
 router.get('/users/me', authenticate, getMe);
