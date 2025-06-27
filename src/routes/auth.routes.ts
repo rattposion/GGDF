@@ -68,7 +68,7 @@ router.get('/auth/steam/return', passport.authenticate('steam', { session: false
     return res.redirect('http://localhost:5173/auth/link/steam/callback?error=invalidtoken');
   }
   // Pega o providerId do social (do req.user, que é o profile social, não o usuário do sistema)
-  const providerId = (req.user as any)?.id || (req.account as any)?.id;
+  const providerId = (req as any).user?.id;
   if (!providerId) {
     return res.redirect('http://localhost:5173/auth/link/steam/callback?error=noproviderid');
   }
@@ -96,7 +96,7 @@ router.get('/auth/discord/return', passport.authenticate('discord', { session: f
     return res.redirect('http://localhost:5173/auth/link/discord/callback?error=invalidtoken');
   }
   // Pega o providerId do social (do req.user, que é o profile social, não o usuário do sistema)
-  const providerId = (req.user as any)?.id || (req.account as any)?.id;
+  const providerId = (req as any).user?.id;
   if (!providerId) {
     return res.redirect('http://localhost:5173/auth/link/discord/callback?error=noproviderid');
   }
