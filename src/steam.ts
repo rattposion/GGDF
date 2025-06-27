@@ -13,7 +13,7 @@ passport.use(new SteamStrategy({
 }, async (identifier: string, profile: any, done: (err: any, user?: any) => void) => {
   try {
     // Verifica se já existe vínculo para essa Steam
-    const existing = await prisma.contaVinculada.findUnique({ where: { steamId: profile.id } });
+    const existing = await prisma.socialLink.findUnique({ where: { provider_providerId: { provider: 'steam', providerId: profile.id } } });
     if (existing) {
       return done(new Error('Esta conta Steam já está vinculada a outro usuário Discord.'));
     }
@@ -36,15 +36,16 @@ passport.use(new SteamStrategy({
       return done(new Error('Token inválido. Faça login novamente.'));
     }
     // Verifica se já existe vínculo para esse Discord
-    const existingDiscord = await prisma.contaVinculada.findUnique({ where: { discordId: userId } });
+    const existingDiscord = await prisma.socialLink.findUnique({ where: { provider_providerId: { provider: 'discord', providerId: userId } } });
     if (existingDiscord) {
       return done(new Error('Este Discord já está vinculado a uma conta Steam.'));
     }
     // Cria o vínculo
-    await prisma.contaVinculada.create({
+    await prisma.socialLink.create({
       data: {
-        discordId: userId,
-        steamId: profile.id
+        userId: userId,
+        provider: 'steam',
+        providerId: profile.id
       }
     });
     // Opcional: atualizar avatar/nome do usuário, se desejar
@@ -66,14 +67,14 @@ passport.use(new DiscordStrategy({
 }, async (accessToken: string, refreshToken: string, profile: any, done: (err: any, user?: any) => void) => {
   try {
     // Verifica se já existe vínculo para esse Discord
-    const existing = await prisma.contaVinculada.findUnique({ where: { discordId: profile.id } });
+    const existing = await prisma.socialLink.findUnique({ where: { provider_providerId: { provider: 'discord', providerId: profile.id } } });
     if (existing) {
       return done(new Error('Esta conta Discord já está vinculada a uma conta Steam.'));
     }
     // Aqui você deve obter o steamId do usuário logado, se desejar permitir o fluxo inverso
     // Exemplo: const steamId = profile.req?.user?.steamId;
     // Se quiser permitir criar vínculo só pelo Discord, pode criar o vínculo vazio e permitir completar depois
-    // await prisma.contaVinculada.create({ data: { discordId: profile.id, steamId: null } });
+    // await prisma.socialLink.create({ data: { userId: profile.id, provider: 'discord', providerId: null } });
     // ...
     // Para este exemplo, só permite criar vínculo se já houver Steam logada
     return done(null, { id: profile.id, username: profile.username, discordUsername: profile.username, discordAvatar: profile.avatar });

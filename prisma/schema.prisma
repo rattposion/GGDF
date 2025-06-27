@@ -9,255 +9,258 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  username     String   @unique
-  email        String   @unique
-  password     String
-  avatar       String?
-  steamId      String? @unique
-  discordId    String? @unique
-  discordUsername String?
-  discordAvatar String?
-  balance      Float    @default(0)
-  rating       Float    @default(0)
-  totalSales   Int      @default(0)
-  joinDate     DateTime @default(now())
-  isVerified   Boolean  @default(false)
-  isBanned     Boolean  @default(false)
-  isAdmin      Boolean  @default(false)
-  products     Product[]
-  orders       Order[]  @relation("UserOrders")
-  reviews      Review[] @relation("UserReviews")
-  questions    Question[]
-  notifications Notification[]
-  wallet       Wallet?
-  ordersVendidos Order[] @relation("UserOrdersVendidos")
-  reviewsComprador Review[] @relation("UserReviewsComprador")
-  sentMessages ChatMessage[] @relation("UserSentMessages")
-  favorites    Favorite[]
-  highlights   Highlight[]
-  reports      Report[]
-  twofa        Boolean   @default(false)
-  kyc          Boolean   @default(false)
-  pix          String?
-  logs         Log[]
-  affiliates   Affiliate[]
-  feedbacksGiven     Feedback[] @relation("FeedbackFromUser")
-  feedbacksReceived  Feedback[] @relation("FeedbackToUser")
-  feedbacksReported  Feedback[] @relation("FeedbackReportedBy")
+  id                String         @id @default(uuid())
+  username          String         @unique
+  email             String         @unique
+  password          String
+  avatar            String?
+  steamId           String?        @unique
+  balance           Float          @default(0)
+  rating            Float          @default(0)
+  totalSales        Int            @default(0)
+  joinDate          DateTime       @default(now())
+  isVerified        Boolean        @default(false)
+  isBanned          Boolean        @default(false)
+  discordId         String?        @unique
+  kyc               Boolean        @default(false)
+  pix               String?
+  twofa             Boolean        @default(false)
+  isAdmin           Boolean        @default(false)
+  discordAvatar     String?
+  discordUsername   String?
+  steamAvatar       String?
+  steamUsername     String?
+  affiliates        Affiliate[]
+  sentMessages      ChatMessage[]  @relation("UserSentMessages")
+  favorites         Favorite[]
+  feedbacksGiven    Feedback[]     @relation("FeedbackFromUser")
+  feedbacksReported Feedback[]     @relation("FeedbackReportedBy")
+  feedbacksReceived Feedback[]     @relation("FeedbackToUser")
+  highlights        Highlight[]
+  logs              Log[]
+  notifications     Notification[]
+  orders            Order[]        @relation("UserOrders")
+  ordersVendidos    Order[]        @relation("UserOrdersVendidos")
+  products          Product[]
+  questions         Question[]
+  reports           Report[]
+  reviewsComprador  Review[]       @relation("UserReviewsComprador")
+  reviews           Review[]       @relation("UserReviews")
+  wallet            Wallet?
+  socialLinks       SocialLink[]
 }
 
 model Category {
-  id           String   @id @default(uuid())
-  name         String
-  slug         String   @unique
-  icon         String
-  description  String
+  id            String        @id @default(uuid())
+  name          String
+  slug          String        @unique
+  icon          String
+  description   String
+  products      Product[]
   subcategories Subcategory[]
-  products     Product[]
 }
 
 model Subcategory {
-  id           String   @id @default(uuid())
-  name         String
-  slug         String
-  category     Category @relation(fields: [categoryId], references: [id])
-  categoryId   String
-  products     Product[]
-  emoji        String?  // Emoji representando a subcategoria
+  id         String    @id @default(uuid())
+  name       String
+  slug       String
+  categoryId String
+  emoji      String?
+  products   Product[]
+  category   Category  @relation(fields: [categoryId], references: [id])
 
   @@unique([name, categoryId])
 }
 
 model Product {
-  id           String   @id @default(uuid())
-  title        String
-  description  String
-  price        Float
-  images       String[]
-  category     Category @relation(fields: [categoryId], references: [id])
-  categoryId   String
-  subcategory  Subcategory @relation(fields: [subcategoryId], references: [id])
-  subcategoryId String
-  type         String
-  seller       User     @relation(fields: [sellerId], references: [id])
-  sellerId     String
-  stock        Int?
-  isActive     Boolean  @default(true)
-  hasAutoDelivery Boolean @default(false)
-  deliveryType String?
-  deliveryContent String?
-  guarantee    String?
-  status       String   @default("available")
-  variations   ProductVariation[]
+  id                String             @id @default(uuid())
+  title             String
+  description       String
+  price             Float
+  images            String[]
+  categoryId        String
+  subcategoryId     String
+  type              String
+  sellerId          String
+  stock             Int?
+  isActive          Boolean            @default(true)
+  hasAutoDelivery   Boolean            @default(false)
+  deliveryType      String?
+  deliveryContent   String?
+  guarantee         String?
+  status            String             @default("available")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  views             Int                @default(0)
+  likes             Int                @default(0)
+  rating            Float              @default(0)
+  totalReviews      Int                @default(0)
+  highlighted       Boolean            @default(false)
+  favorites         Favorite[]
+  highlights        Highlight[]
+  orders            Order[]
+  category          Category           @relation(fields: [categoryId], references: [id])
+  seller            User               @relation(fields: [sellerId], references: [id])
+  subcategory       Subcategory        @relation(fields: [subcategoryId], references: [id])
+  variations        ProductVariation[]
+  questions         Question[]
+  reviews           Review[]
   subscriptionPlans SubscriptionPlan[]
-  reviews      Review[]
-  questions    Question[]
-  orders       Order[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  views        Int      @default(0)
-  likes        Int      @default(0)
-  rating       Float    @default(0)
-  totalReviews Int      @default(0)
-  favorites    Favorite[]
-  highlights   Highlight[]
 }
 
 model ProductVariation {
-  id           String   @id @default(uuid())
-  name         String
-  price        Float
-  description  String
-  stock        Int?
-  product      Product  @relation(fields: [productId], references: [id])
-  productId    String
+  id                String             @id @default(uuid())
+  name              String
+  price             Float
+  description       String
+  stock             Int?
+  productId         String
+  orders            Order[]            @relation("VariationOrders")
+  product           Product            @relation(fields: [productId], references: [id])
   subscriptionPlans SubscriptionPlan[]
-  orders       Order[] @relation("VariationOrders")
 }
 
 model SubscriptionPlan {
-  id           String   @id @default(uuid())
-  name         String
-  duration     String
-  price        Float
-  autoRenew    Boolean  @default(false)
-  product      Product? @relation(fields: [productId], references: [id])
-  productId    String?
-  variation    ProductVariation? @relation(fields: [variationId], references: [id])
-  variationId  String?
-  orders       Order[] @relation("PlanOrders")
+  id          String            @id @default(uuid())
+  name        String
+  duration    String
+  price       Float
+  autoRenew   Boolean           @default(false)
+  productId   String?
+  variationId String?
+  orders      Order[]           @relation("PlanOrders")
+  product     Product?          @relation(fields: [productId], references: [id])
+  variation   ProductVariation? @relation(fields: [variationId], references: [id])
 }
 
 model Order {
-  id           String   @id @default(uuid())
-  product      Product  @relation(fields: [productId], references: [id])
-  productId    String
-  buyer        User     @relation("UserOrders", fields: [buyerId], references: [id])
-  buyerId      String
-  seller       User     @relation("UserOrdersVendidos", fields: [sellerId], references: [id])
-  sellerId     String
-  variation    ProductVariation? @relation("VariationOrders", fields: [variationId], references: [id])
-  variationId  String?
-  subscriptionPlan SubscriptionPlan? @relation("PlanOrders", fields: [subscriptionPlanId], references: [id])
+  id                 String            @id @default(uuid())
+  productId          String
+  buyerId            String
+  sellerId           String
+  variationId        String?
   subscriptionPlanId String?
-  amount       Float
-  status       String
-  paymentMethod String
-  deliveryContent String?
-  createdAt    DateTime @default(now())
-  completedAt  DateTime?
-  chatMessages ChatMessage[]
-  dispute      Dispute?
-  feedbacks    Feedback[]
+  amount             Float
+  status             String
+  paymentMethod      String
+  deliveryContent    String?
+  createdAt          DateTime          @default(now())
+  completedAt        DateTime?
+  chatMessages       ChatMessage[]
+  dispute            Dispute?
+  feedbacks          Feedback[]
+  buyer              User              @relation("UserOrders", fields: [buyerId], references: [id])
+  product            Product           @relation(fields: [productId], references: [id])
+  seller             User              @relation("UserOrdersVendidos", fields: [sellerId], references: [id])
+  subscriptionPlan   SubscriptionPlan? @relation("PlanOrders", fields: [subscriptionPlanId], references: [id])
+  variation          ProductVariation? @relation("VariationOrders", fields: [variationId], references: [id])
 }
 
 model Notification {
-  id           String   @id @default(uuid())
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String
-  type         String
-  title        String
-  message      String
-  read         Boolean  @default(false)
-  actionUrl    String?
-  createdAt    DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  actionUrl String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Review {
-  id           String   @id @default(uuid())
-  product      Product  @relation(fields: [productId], references: [id])
-  productId    String
-  buyer        User     @relation("UserReviewsComprador", fields: [buyerId], references: [id])
-  buyerId      String
-  seller       User     @relation("UserReviews", fields: [sellerId], references: [id])
-  sellerId     String
-  rating       Int
-  comment      String
-  createdAt    DateTime @default(now())
+  id        String   @id @default(uuid())
+  productId String
+  buyerId   String
+  sellerId  String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  buyer     User     @relation("UserReviewsComprador", fields: [buyerId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  seller    User     @relation("UserReviews", fields: [sellerId], references: [id])
 }
 
 model Question {
-  id           String   @id @default(uuid())
-  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  productId    String
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String
-  question     String
-  answer       String?
-  createdAt    DateTime @default(now())
-  answeredAt   DateTime?
+  id         String    @id @default(uuid())
+  productId  String
+  userId     String
+  question   String
+  answer     String?
+  createdAt  DateTime  @default(now())
+  answeredAt DateTime?
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id])
 }
 
 model ChatMessage {
-  id           String   @id @default(uuid())
-  order        Order    @relation(fields: [orderId], references: [id])
-  orderId      String
-  sender       User     @relation("UserSentMessages", fields: [senderId], references: [id])
-  senderId     String
-  message      String
-  type         String
-  createdAt    DateTime @default(now())
+  id        String   @id @default(uuid())
+  orderId   String
+  senderId  String
+  message   String
+  type      String
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
+  sender    User     @relation("UserSentMessages", fields: [senderId], references: [id])
 }
 
 model Dispute {
-  id           String   @id @default(uuid())
-  order        Order    @relation(fields: [orderId], references: [id])
-  orderId      String @unique
-  reason       String
-  description  String
-  evidence     String[]
-  status       String
-  resolution   String?
-  createdAt    DateTime @default(now())
-  resolvedAt   DateTime?
+  id          String    @id @default(uuid())
+  orderId     String    @unique
+  reason      String
+  description String
+  evidence    String[]
+  status      String
+  resolution  String?
+  createdAt   DateTime  @default(now())
+  resolvedAt  DateTime?
+  order       Order     @relation(fields: [orderId], references: [id])
 }
 
 model Wallet {
-  id           String   @id @default(uuid())
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String   @unique
-  balance      Float    @default(0)
+  id           String        @id @default(uuid())
+  userId       String        @unique
+  balance      Float         @default(0)
   transactions Transaction[]
+  user         User          @relation(fields: [userId], references: [id])
 }
 
 model Transaction {
-  id           String   @id @default(uuid())
-  wallet       Wallet   @relation(fields: [walletId], references: [id])
-  walletId     String
-  type         String
-  amount       Float
-  status       String
-  createdAt    DateTime @default(now())
+  id        String   @id @default(uuid())
+  walletId  String
+  type      String
+  amount    Float
+  status    String
+  createdAt DateTime @default(now())
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
 }
 
 model Favorite {
   id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  product   Product  @relation(fields: [productId], references: [id])
   productId String
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, productId])
 }
 
 model Highlight {
-  id         String   @id @default(uuid())
-  product    Product  @relation(fields: [productId], references: [id])
-  productId  String
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String
-  plan       String   // Ex: "7d", "15d", "30d"
-  startDate  DateTime @default(now())
-  endDate    DateTime
-  status     String   @default("active")
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  productId String
+  userId    String
+  plan      String
+  startDate DateTime @default(now())
+  endDate   DateTime
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Report {
   id          String   @id @default(uuid())
-  user        User     @relation(fields: [userId], references: [id])
   userId      String
   title       String
   description String
@@ -265,16 +268,17 @@ model Report {
   attachment  String?
   createdAt   DateTime @default(now())
   status      String   @default("pendente")
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Log {
   id        String   @id @default(uuid())
-  user      User?    @relation(fields: [userId], references: [id])
   userId    String?
-  type      String   // Ex: 'login', 'admin', 'erro', 'acesso', etc
+  type      String
   message   String
   meta      Json?
   createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 model Integration {
@@ -287,58 +291,75 @@ model Integration {
 }
 
 model Affiliate {
-  id           String   @id @default(uuid())
-  user         User     @relation(fields: [userId], references: [id])
-  userId       String
-  link         String   @unique
-  clicks       Int      @default(0)
-  conversions  Int      @default(0)
-  total        Float    @default(0)
-  withdrawals  Int      @default(0)
-  rule         String   @default("5%")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(uuid())
+  userId      String
+  link        String   @unique
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  total       Float    @default(0)
+  withdrawals Int      @default(0)
+  rule        String   @default("5%")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model AdminChat {
   id        String         @id @default(uuid())
   name      String
-  messages  AdminMessage[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
+  messages  AdminMessage[]
 }
 
 model AdminMessage {
-  id        String     @id @default(uuid())
-  chat      AdminChat  @relation(fields: [chatId], references: [id])
+  id        String    @id @default(uuid())
   chatId    String
   from      String
   text      String
   date      String
-  createdAt DateTime   @default(now())
+  createdAt DateTime  @default(now())
+  chat      AdminChat @relation(fields: [chatId], references: [id])
 }
 
 model Feedback {
   id           String   @id @default(uuid())
-  order        Order    @relation(fields: [orderId], references: [id])
   orderId      String
-  fromUser     User     @relation("FeedbackFromUser", fields: [fromUserId], references: [id])
   fromUserId   String
-  toUser       User     @relation("FeedbackToUser", fields: [toUserId], references: [id])
   toUserId     String
-  rating       Int      // 1-5 estrelas
-  type         String   // positivo, neutro, negativo (derivado do rating)
+  rating       Int
+  type         String
   comment      String
   createdAt    DateTime @default(now())
-  status       String   @default("active") // active, reported, removed
-  reportedBy   User?    @relation("FeedbackReportedBy", fields: [reportedById], references: [id])
+  status       String   @default("active")
   reportedById String?
   isAutomatic  Boolean  @default(false)
+  fromUser     User     @relation("FeedbackFromUser", fields: [fromUserId], references: [id])
+  order        Order    @relation(fields: [orderId], references: [id])
+  reportedBy   User?    @relation("FeedbackReportedBy", fields: [reportedById], references: [id])
+  toUser       User     @relation("FeedbackToUser", fields: [toUserId], references: [id])
 }
 
-model ContaVinculada {
+model SteamTrade {
+  id               String   @id
+  productId        String?
+  steamItemId      String
+  itemName         String
+  gameId           String
+  subcategoryId    String
+  tradeId          String   @unique
+  status           String
+  botInventorySlot String?
+  createdAt        DateTime @default(now())
+}
+
+model SocialLink {
   id         String   @id @default(uuid())
-  discordId  String   @unique
-  steamId    String   @unique
+  userId     String
+  provider   String   // 'steam', 'discord', etc.
+  providerId String   // id do usuário no provedor
   createdAt  DateTime @default(now())
-} 
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId])
+}
