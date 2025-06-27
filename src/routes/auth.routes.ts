@@ -4,13 +4,14 @@ import passport from 'passport';
 import { generateJWT } from '../steam';
 import { authenticate } from '../middlewares/auth.middleware';
 import { getUserReviews } from '../controllers/review.controller';
-import { JWT_SECRET } from '../config';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../db';
+import prisma from '../prisma';
 
 const router = Router();
 const cookieParser = require('cookie-parser');
 router.use(cookieParser());
+
+const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 
 router.post('/register', register);
 router.post('/login', login);
@@ -59,15 +60,21 @@ router.get('/auth/steam/return', passport.authenticate('steam', { session: false
   let userId;
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    userId = decoded.id;
+    if (typeof decoded !== 'object' || !('id' in decoded)) {
+      return res.redirect('http://localhost:5173/auth/link/steam/callback?error=invalidtoken');
+    }
+    userId = (decoded as any).id;
   } catch {
     return res.redirect('http://localhost:5173/auth/link/steam/callback?error=invalidtoken');
   }
-  // Associe a conta social ao userId
+  if (!req.user || typeof req.user !== 'object' || !('id' in req.user)) {
+    return res.redirect('http://localhost:5173/auth/link/steam/callback?error=nouser');
+  }
+  const providerId = (req.user as any).id;
   await prisma.socialAccount.upsert({
-    where: { provider_providerId: { provider: 'steam', providerId: req.user.id } },
+    where: { provider_providerId: { provider: 'steam', providerId } },
     update: { userId },
-    create: { userId, provider: 'steam', providerId: req.user.id }
+    create: { userId, provider: 'steam', providerId }
   });
   return res.redirect('http://localhost:5173/auth/link/steam/callback?success=1');
 });
@@ -80,15 +87,21 @@ router.get('/auth/discord/return', passport.authenticate('discord', { session: f
   let userId;
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    userId = decoded.id;
+    if (typeof decoded !== 'object' || !('id' in decoded)) {
+      return res.redirect('http://localhost:5173/auth/link/discord/callback?error=invalidtoken');
+    }
+    userId = (decoded as any).id;
   } catch {
     return res.redirect('http://localhost:5173/auth/link/discord/callback?error=invalidtoken');
   }
-  // Associe a conta social ao userId
+  if (!req.user || typeof req.user !== 'object' || !('id' in req.user)) {
+    return res.redirect('http://localhost:5173/auth/link/discord/callback?error=nouser');
+  }
+  const providerId = (req.user as any).id;
   await prisma.socialAccount.upsert({
-    where: { provider_providerId: { provider: 'discord', providerId: req.user.id } },
+    where: { provider_providerId: { provider: 'discord', providerId } },
     update: { userId },
-    create: { userId, provider: 'discord', providerId: req.user.id }
+    create: { userId, provider: 'discord', providerId }
   });
   return res.redirect('http://localhost:5173/auth/link/discord/callback?success=1');
 });
