@@ -3,6 +3,7 @@ import { Strategy as SteamStrategy } from 'passport-steam';
 import { Strategy as DiscordStrategy } from 'passport-discord';
 import prisma from './prisma';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 
@@ -15,7 +16,9 @@ passport.use(new SteamStrategy({
     // Verifica se já existe vínculo para essa Steam
     const existing = await prisma.socialLink.findUnique({ where: { provider_providerId: { provider: 'steam', providerId: profile.id } } });
     if (existing) {
-      return done(new Error('Esta conta Steam já está vinculada a outro usuário Discord.'));
+      // Busca o usuário vinculado
+      const user = await prisma.user.findUnique({ where: { id: existing.userId } });
+      return done(null, user);
     }
     // Recupera o token JWT da sessão
     const token = profile.req?.session?.jwt;
@@ -35,6 +38,23 @@ passport.use(new SteamStrategy({
     } catch {
       return done(new Error('Token inválido. Faça login novamente.'));
     }
+    // Busca ou cria o usuário na tabela User
+    let user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      // Cria usuário mínimo (pode ser expandido conforme necessário)
+      user = await prisma.user.create({
+        data: {
+          id: userId,
+          username: `steam_${profile.id}`,
+          email: `${profile.id}@steam.local`,
+          password: await bcrypt.hash(Math.random().toString(36), 10),
+          steamId: profile.id,
+        }
+      });
+    } else if (!user.steamId) {
+      // Atualiza steamId se não estiver setado
+      await prisma.user.update({ where: { id: userId }, data: { steamId: profile.id } });
+    }
     // Verifica se já existe vínculo para esse Discord
     const existingDiscord = await prisma.socialLink.findUnique({ where: { provider_providerId: { provider: 'discord', providerId: userId } } });
     if (existingDiscord) {
@@ -43,13 +63,13 @@ passport.use(new SteamStrategy({
     // Cria o vínculo
     await prisma.socialLink.create({
       data: {
-        userId: userId,
+        userId: user.id,
         provider: 'steam',
         providerId: profile.id
       }
     });
     // Opcional: atualizar avatar/nome do usuário, se desejar
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    // const user = await prisma.user.findUnique({ where: { id: userId } });
     return done(null, user);
   } catch (err: any) {
     if (err.code === 'P2021' || (err.message && err.message.includes('does not exist'))) {
