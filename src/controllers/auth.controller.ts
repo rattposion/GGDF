@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
 import passport from 'passport';
+import axios from 'axios';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme';
 
@@ -259,12 +260,28 @@ export const linkDiscordCallback = [
   }
 ];
 
+// Função utilitária para checar se perfil Steam é público
+async function isSteamProfilePublic(steamId: string): Promise<boolean> {
+  const apiKey = process.env.STEAM_API_KEY;
+  const url = `http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${apiKey}&steamids=${steamId}`;
+  const { data } = await axios.get(url);
+  const player = data.response.players[0];
+  return player && player.communityvisibilitystate === 3;
+}
+
 // Vincular conta social (Steam, Discord, etc)
 export const linkSocialAccount = async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const { provider, providerId, accessToken, refreshToken } = req.body;
   if (!provider || !providerId) {
     return res.status(400).json({ error: 'Provedor e ID do provedor são obrigatórios.' });
+  }
+  // Validação de perfil público Steam
+  if (provider === 'steam') {
+    const isPublic = await isSteamProfilePublic(providerId);
+    if (!isPublic) {
+      return res.status(400).json({ error: 'Seu perfil Steam está privado. Torne-o público para vincular.' });
+    }
   }
   // Verificar duplicidade
   const existing = await prisma.socialAccount.findUnique({ where: { provider_providerId: { provider, providerId } } });
