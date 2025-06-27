@@ -79,8 +79,6 @@ export const getMe = async (req: Request, res: Response) => {
             id: true,
             provider: true,
             providerId: true,
-            username: true,
-            avatar: true,
             createdAt: true
           }
         }
