@@ -179,64 +179,12 @@ export const linkSteam = passport.authenticate('steam', { scope: ['identify'], s
 // Inicia OAuth Discord para vinculação
 export const linkDiscord = passport.authenticate('discord', { scope: ['identify', 'email'], session: false });
 
-// Callback de vinculação Steam
-export const linkSteamCallback = [
-  passport.authenticate('steam', { failureRedirect: '/profile?error=steam', session: false }),
-  async (req: Request, res: Response) => {
-    const steamId = (req.user as any)?.steamId;
-    const userId = (req as any).userId;
-    if (!userId || !steamId) return res.status(401).json({ error: 'Não autenticado.' });
-    // Verifica se steamId já está em uso
-    const existing = await prisma.user.findUnique({ where: { steamId } });
-    if (existing && existing.id !== userId) {
-      return res.redirect('/profile?error=steam_in_use');
-    }
-    // Atualiza usuário logado
-    await prisma.user.update({ where: { id: userId }, data: { steamId } });
-    res.redirect('/profile?success=steam_linked');
-  }
-];
-
-// Callback de vinculação Discord
-export const linkDiscordCallback = [
-  passport.authenticate('discord', { failureRedirect: '/profile?error=discord', session: false }),
-  async (req: Request, res: Response) => {
-    const discordId = (req.user as any)?.discordId;
-    const userId = (req as any).userId;
-    if (!userId || !discordId) return res.status(401).json({ error: 'Não autenticado.' });
-    // Verifica se discordId já está em uso
-    const existing = await prisma.user.findUnique({ where: { discordId } });
-    if (existing && existing.id !== userId) {
-      return res.redirect('/profile?error=discord_in_use');
-    }
-    // Atualiza usuário logado
-    await prisma.user.update({ where: { id: userId }, data: { discordId } });
-    res.redirect('/profile?success=discord_linked');
-  }
-];
-
-// Função utilitária para checar se perfil Steam é público
-async function isSteamProfilePublic(steamId: string): Promise<boolean> {
-  const apiKey = process.env.STEAM_API_KEY;
-  const url = `http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${apiKey}&steamids=${steamId}`;
-  const { data } = await axios.get(url);
-  const player = data.response.players[0];
-  return player && player.communityvisibilitystate === 3;
-}
-
 // Vincular conta social (Steam, Discord, etc)
 export const linkSocialAccount = async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const { provider, providerId, accessToken, refreshToken } = req.body;
   if (!provider || !providerId) {
     return res.status(400).json({ error: 'Provedor e ID do provedor são obrigatórios.' });
-  }
-  // Validação de perfil público Steam
-  if (provider === 'steam') {
-    const isPublic = await isSteamProfilePublic(providerId);
-    if (!isPublic) {
-      return res.status(400).json({ error: 'Seu perfil Steam está privado. Torne-o público para vincular.' });
-    }
   }
   // Verificar duplicidade
   const existing = await prisma.socialAccount.findUnique({ where: { provider_providerId: { provider, providerId } } });
