@@ -24,7 +24,9 @@ import {
   createAdminChat,
   sendAdminMessage,
   getDashboard,
-  highlightProduct
+  highlightProduct,
+  deleteUser,
+  importCategories
 } from '../controllers/admin.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import prisma from '../prisma';
@@ -151,5 +153,7 @@ router.get('/link-logs', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar logs de vinculação.' });
   }
 });
+router.delete('/users/:id', authenticate, deleteUser);
+router.post('/categories/import', authenticate, importCategories);
 
 export default router; 

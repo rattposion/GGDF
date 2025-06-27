@@ -321,4 +321,46 @@ export const highlightProduct = async (req: Request, res: Response) => {
   } catch (err) {
     res.status(500).json({ error: 'Erro ao destacar produto.' });
   }
+};
+
+// Deletar usuário (e contas sociais em cascata)
+export const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.user.delete({ where: { id } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao excluir usuário.' });
+  }
+};
+
+// Importar categorias e subcategorias via JSON
+export const importCategories = async (req: Request, res: Response) => {
+  try {
+    const categorias = req.body.categorias || req.body;
+    if (!Array.isArray(categorias)) {
+      return res.status(400).json({ error: 'Formato inválido. Envie um array de categorias.' });
+    }
+    for (const cat of categorias) {
+      // Cria ou atualiza categoria
+      let categoria = await prisma.category.upsert({
+        where: { slug: cat.slug },
+        update: { name: cat.name, icon: cat.icon, description: cat.description },
+        create: { name: cat.name, slug: cat.slug, icon: cat.icon, description: cat.description }
+      });
+      for (const sub of cat.subcategorias || cat.subcategories || []) {
+        const subSlug = sub.slug || sub.name.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/(^-|-$)/g, '');
+        // Busca subcategoria existente
+        const existing = await prisma.subcategory.findFirst({ where: { name: sub.name, categoryId: categoria.id } });
+        if (existing) {
+          await prisma.subcategory.update({ where: { id: existing.id }, data: { emoji: sub.emoji, slug: subSlug } });
+        } else {
+          await prisma.subcategory.create({ data: { name: sub.name, slug: subSlug, categoryId: categoria.id, emoji: sub.emoji } });
+        }
+      }
+    }
+    res.json({ success: true, message: 'Categorias importadas com sucesso!' });
+  } catch (e) {
+    res.status(500).json({ error: 'Erro ao importar categorias.' });
+  }
 }; 
