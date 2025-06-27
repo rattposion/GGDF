@@ -17,7 +17,7 @@ passport.use(new SteamStrategy({
 }, async function(identifier: string, profile: any, done: (err: any, user?: any) => void, req?: any) {
   try {
     let user;
-    let avatar = profile.photos?.[2]?.value || profile.photos?.[0]?.value || '/steam.svg';
+    let avatarUrl = profile.photos?.[2]?.value || profile.photos?.[0]?.value || '/steam.svg';
     // Se houver token JWT na query, associar ao usuário autenticado
     const token = req?.query?.token;
     if (token) {
@@ -25,8 +25,8 @@ passport.use(new SteamStrategy({
       user = await prisma.user.findUnique({ where: { id: decoded.id } });
       if (!user) return done('Usuário autenticado não encontrado');
       // Atualiza avatar se necessário
-      if (user.avatar !== avatar) {
-        user = await prisma.user.update({ where: { id: user.id }, data: { avatar } });
+      if (user.avatarUrl !== avatarUrl) {
+        user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
       }
     } else {
       // Fluxo normal: login/cadastro
@@ -38,12 +38,12 @@ passport.use(new SteamStrategy({
             username: profile.displayName,
             email,
             password: 'social_login',
-            avatar,
+            avatarUrl,
             isVerified: true,
           }
         });
-      } else if (user.avatar !== avatar) {
-        user = await prisma.user.update({ where: { id: user.id }, data: { avatar } });
+      } else if (user.avatarUrl !== avatarUrl) {
+        user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
       }
     }
     // Vincula ou atualiza SocialAccount
@@ -77,14 +77,14 @@ passport.use(new DiscordStrategy({
 }, async function(accessToken: string, refreshToken: string, profile: any, done: (err: any, user?: any) => void, req?: any) {
   try {
     let user;
-    let avatar = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : '/discord.svg';
+    let avatarUrl = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : '/discord.svg';
     const token = req?.query?.token;
     if (token) {
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
       user = await prisma.user.findUnique({ where: { id: decoded.id } });
       if (!user) return done('Usuário autenticado não encontrado');
-      if (user.avatar !== avatar) {
-        user = await prisma.user.update({ where: { id: user.id }, data: { avatar } });
+      if (user.avatarUrl !== avatarUrl) {
+        user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
       }
     } else {
       const email = profile.email || `${profile.id}@discord.com`;
@@ -95,12 +95,12 @@ passport.use(new DiscordStrategy({
             username: profile.username,
             email,
             password: 'social_login',
-            avatar,
+            avatarUrl,
             isVerified: true,
           }
         });
-      } else if (user.avatar !== avatar) {
-        user = await prisma.user.update({ where: { id: user.id }, data: { avatar } });
+      } else if (user.avatarUrl !== avatarUrl) {
+        user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
       }
     }
     await prisma.socialAccount.upsert({
