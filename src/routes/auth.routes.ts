@@ -56,19 +56,25 @@ router.get('/auth/discord', (req, res, next) => {
 router.get('/auth/steam/return', passport.authenticate('steam', { session: false }), async (req, res) => {
   const token = req.cookies.link_jwt;
   res.clearCookie('link_jwt');
-  if (!token) return res.redirect('http://localhost:5173/auth/link/steam/callback?error=notoken');
+  // LOGS DE DEBUG
+  console.log('--- SOCIAL LINK CALLBACK STEAM ---');
+  console.log('token:', token);
   let userId;
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (typeof decoded !== 'object' || !('id' in decoded)) {
+      console.log('Token inválido');
       return res.redirect('http://localhost:5173/auth/link/steam/callback?error=invalidtoken');
     }
     userId = (decoded as any).id;
+    console.log('userId do token:', userId);
   } catch {
+    console.log('Token inválido (catch)');
     return res.redirect('http://localhost:5173/auth/link/steam/callback?error=invalidtoken');
   }
-  // Pega o providerId do social (do req.user, que é o profile social, não o usuário do sistema)
   const providerId = (req as any).user?.id;
+  console.log('providerId:', providerId);
+  console.log('req.user:', (req as any).user);
   if (!providerId) {
     return res.redirect('http://localhost:5173/auth/link/steam/callback?error=noproviderid');
   }
@@ -84,19 +90,25 @@ router.get('/auth/steam/return', passport.authenticate('steam', { session: false
 router.get('/auth/discord/return', passport.authenticate('discord', { session: false }), async (req, res) => {
   const token = req.cookies.link_jwt;
   res.clearCookie('link_jwt');
-  if (!token) return res.redirect('http://localhost:5173/auth/link/discord/callback?error=notoken');
+  // LOGS DE DEBUG
+  console.log('--- SOCIAL LINK CALLBACK DISCORD ---');
+  console.log('token:', token);
   let userId;
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (typeof decoded !== 'object' || !('id' in decoded)) {
+      console.log('Token inválido');
       return res.redirect('http://localhost:5173/auth/link/discord/callback?error=invalidtoken');
     }
     userId = (decoded as any).id;
+    console.log('userId do token:', userId);
   } catch {
+    console.log('Token inválido (catch)');
     return res.redirect('http://localhost:5173/auth/link/discord/callback?error=invalidtoken');
   }
-  // Pega o providerId do social (do req.user, que é o profile social, não o usuário do sistema)
   const providerId = (req as any).user?.id;
+  console.log('providerId:', providerId);
+  console.log('req.user:', (req as any).user);
   if (!providerId) {
     return res.redirect('http://localhost:5173/auth/link/discord/callback?error=noproviderid');
   }
