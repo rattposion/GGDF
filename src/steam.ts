@@ -17,20 +17,25 @@ passport.use(new SteamStrategy({
   passReqToCallback: true
 }, async function(req: any, identifier: string, profile: any, done: (err: any, user?: any) => void) {
   try {
+    const token = req?.query?.token || req?.cookies?.link_jwt;
     let user;
     let avatarUrl = profile.photos?.[2]?.value || profile.photos?.[0]?.value || '/steam.svg';
-    // Se houver token JWT na query ou no cookie, associar ao usuário autenticado
-    const token = req?.query?.token || req?.cookies?.link_jwt;
     if (token) {
+      // FLUXO DE VINCULAÇÃO: nunca cria novo usuário, nunca troca login
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
       user = await prisma.user.findUnique({ where: { id: decoded.id } });
       if (!user) return done('Usuário autenticado não encontrado');
-      // Atualiza avatar se necessário
       if (user.avatarUrl !== avatarUrl) {
         user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
       }
+      await prisma.socialAccount.upsert({
+        where: { provider_providerId: { provider: 'steam', providerId: profile.id } },
+        update: { userId: user.id },
+        create: { userId: user.id, provider: 'steam', providerId: profile.id }
+      });
+      return done(null, user); // nunca retorna novo token
     } else {
-      // Fluxo normal: login/cadastro
+      // FLUXO DE LOGIN/CADASTRO NORMAL
       const email = `${profile.id}@steamcommunity.com`;
       user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
@@ -46,24 +51,14 @@ passport.use(new SteamStrategy({
       } else if (user.avatarUrl !== avatarUrl) {
         user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
       }
-    }
-    // Vincula ou atualiza SocialAccount
-    await prisma.socialAccount.upsert({
-      where: { provider_providerId: { provider: 'steam', providerId: profile.id } },
-      update: { userId: user.id },
-      create: {
-        userId: user.id,
-        provider: 'steam',
-        providerId: profile.id,
-      }
-    });
-    // Só retorna token novo se for login/cadastro
-    if (!token) {
+      await prisma.socialAccount.upsert({
+        where: { provider_providerId: { provider: 'steam', providerId: profile.id } },
+        update: { userId: user.id },
+        create: { userId: user.id, provider: 'steam', providerId: profile.id }
+      });
       const newToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
       return done(null, { id: user.id, token: newToken });
     }
-    // Se for vinculação, não troca login
-    return done(null, { id: user.id });
   } catch (err) {
     console.error('Erro no login Steam:', err);
     return done(err);
@@ -78,17 +73,35 @@ passport.use(new DiscordStrategy({
   passReqToCallback: true
 }, async function(req: any, accessToken: string, refreshToken: string, profile: any, done: (err: any, user?: any) => void) {
   try {
+    const token = req?.query?.token || req?.cookies?.link_jwt;
     let user;
     let avatarUrl = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : '/discord.svg';
-    const token = req?.query?.token || req?.cookies?.link_jwt;
     if (token) {
+      // FLUXO DE VINCULAÇÃO: nunca cria novo usuário, nunca troca login
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
       user = await prisma.user.findUnique({ where: { id: decoded.id } });
       if (!user) return done('Usuário autenticado não encontrado');
       if (user.avatarUrl !== avatarUrl) {
         user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
       }
+      let providerId = profile.id;
+      if (!providerId) {
+        return done(new Error('Discord profile.id não retornado. Não é possível vincular conta.'));
+      }
+      await prisma.socialAccount.upsert({
+        where: { provider_providerId: { provider: 'discord', providerId } },
+        update: { userId: user.id, accessToken, refreshToken },
+        create: {
+          userId: user.id,
+          provider: 'discord',
+          providerId,
+          accessToken,
+          refreshToken
+        }
+      });
+      return done(null, user); // nunca retorna novo token
     } else {
+      // FLUXO DE LOGIN/CADASTRO NORMAL
       const email = profile.email || `${profile.id}@discord.com`;
       user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
@@ -104,27 +117,24 @@ passport.use(new DiscordStrategy({
       } else if (user.avatarUrl !== avatarUrl) {
         user = await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
       }
-    }
-    let providerId = profile.id;
-    if (!providerId) {
-      return done(new Error('Discord profile.id não retornado. Não é possível vincular conta.'));
-    }
-    await prisma.socialAccount.upsert({
-      where: { provider_providerId: { provider: 'discord', providerId } },
-      update: { userId: user.id, accessToken, refreshToken },
-      create: {
-        userId: user.id,
-        provider: 'discord',
-        providerId,
-        accessToken,
-        refreshToken
+      let providerId = profile.id;
+      if (!providerId) {
+        return done(new Error('Discord profile.id não retornado. Não é possível vincular conta.'));
       }
-    });
-    if (!token) {
+      await prisma.socialAccount.upsert({
+        where: { provider_providerId: { provider: 'discord', providerId } },
+        update: { userId: user.id, accessToken, refreshToken },
+        create: {
+          userId: user.id,
+          provider: 'discord',
+          providerId,
+          accessToken,
+          refreshToken
+        }
+      });
       const newToken = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
       return done(null, { id: user.id, token: newToken });
     }
-    return done(null, { id: user.id });
   } catch (err) {
     console.error('Erro no login Discord:', err);
     return done(err);
