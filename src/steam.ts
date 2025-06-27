@@ -19,8 +19,8 @@ passport.use(new SteamStrategy({
   try {
     let user;
     let avatarUrl = profile.photos?.[2]?.value || profile.photos?.[0]?.value || '/steam.svg';
-    // Se houver token JWT na query, associar ao usuário autenticado
-    const token = req?.query?.token;
+    // Se houver token JWT na query ou no cookie, associar ao usuário autenticado
+    const token = req?.query?.token || req?.cookies?.link_jwt;
     if (token) {
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
       user = await prisma.user.findUnique({ where: { id: decoded.id } });
@@ -80,7 +80,7 @@ passport.use(new DiscordStrategy({
   try {
     let user;
     let avatarUrl = profile.avatar ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png` : '/discord.svg';
-    const token = req?.query?.token;
+    const token = req?.query?.token || req?.cookies?.link_jwt;
     if (token) {
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
       user = await prisma.user.findUnique({ where: { id: decoded.id } });
