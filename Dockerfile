@@ -13,6 +13,9 @@ RUN npm install --production=false
 # Copia o restante do código
 COPY . .
 
+# Gera o Prisma Client
+RUN npx prisma generate
+
 # Build do TypeScript
 RUN npm run build
 
@@ -34,4 +37,4 @@ COPY --from=builder /app/.env ./
 EXPOSE 3333
 
 # Comando de inicialização
-CMD ["node", "dist/server.js"] 
+CMD ["node", "dist/server.js"]
