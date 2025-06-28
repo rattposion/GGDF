@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Backend do marketplace de skins com integração Steam",
+  "description": "Backend do marketplace de skins com integra\u00e7\u00e3o Steam",
   "main": "index.js",
   "scripts": {
     "dev": "ts-node src/server.ts",
