@@ -15,7 +15,7 @@ function getUserIdFromToken(req: Request): number | null {
   }
 }
 
-export const getUsers = async (req: Request, res: Response) => {
+export const getUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const users = await prisma.user.findMany({ select: { id: true, email: true, name: true, createdAt: true } });
     res.json(users);
@@ -24,22 +24,26 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserById = async (req: Request, res: Response) => {
+export const getUserById = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   try {
     const user = await prisma.user.findUnique({ where: { id: Number(id) }, select: { id: true, email: true, name: true, createdAt: true } });
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado.' });
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado.' });
+      return;
+    }
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
   }
 };
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const userId = getUserIdFromToken(req);
   if (!userId || userId !== Number(id)) {
-    return res.status(403).json({ error: 'Acesso negado.' });
+    res.status(403).json({ error: 'Acesso negado.' });
+    return;
   }
   const { name, email } = req.body;
   try {
@@ -54,11 +58,12 @@ export const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const userId = getUserIdFromToken(req);
   if (!userId || userId !== Number(id)) {
-    return res.status(403).json({ error: 'Acesso negado.' });
+    res.status(403).json({ error: 'Acesso negado.' });
+    return;
   }
   try {
     await prisma.user.delete({ where: { id: Number(id) } });
@@ -68,10 +73,13 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export const updateSteamId = async (req: Request, res: Response) => {
+export const updateSteamId = async (req: Request, res: Response): Promise<void> => {
   const userId = req.user?.userId;
   const { steamId } = req.body;
-  if (!userId || !steamId) return res.status(400).json({ error: 'Dados obrigatórios não informados.' });
+  if (!userId || !steamId) {
+    res.status(400).json({ error: 'Dados obrigatórios não informados.' });
+    return;
+  }
   try {
     const user = await prisma.user.update({ where: { id: userId }, data: { steamId } });
     res.json({ message: 'SteamID atualizado com sucesso.', user });

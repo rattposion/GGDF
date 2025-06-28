@@ -3,7 +3,7 @@ import { PrismaClient } from '../generated/prisma';
 
 const prisma = new PrismaClient();
 
-export const getProducts = async (req: Request, res: Response) => {
+export const getProducts = async (req: Request, res: Response): Promise<void> => {
   try {
     const products = await prisma.product.findMany({ include: { owner: { select: { id: true, name: true, email: true } } } });
     res.json(products);
@@ -12,21 +12,25 @@ export const getProducts = async (req: Request, res: Response) => {
   }
 };
 
-export const getProductById = async (req: Request, res: Response) => {
+export const getProductById = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   try {
     const product = await prisma.product.findUnique({ where: { id: Number(id) }, include: { owner: { select: { id: true, name: true, email: true } } } });
-    if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
+    if (!product) {
+      res.status(404).json({ error: 'Produto não encontrado.' });
+      return;
+    }
     res.json(product);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar produto.' });
   }
 };
 
-export const createProduct = async (req: Request, res: Response) => {
+export const createProduct = async (req: Request, res: Response): Promise<void> => {
   const { name, description, price, ownerId } = req.body;
   if (!name || !description || !price || !ownerId) {
-    return res.status(400).json({ error: 'Preencha todos os campos.' });
+    res.status(400).json({ error: 'Preencha todos os campos.' });
+    return;
   }
   try {
     const product = await prisma.product.create({
@@ -50,14 +54,20 @@ function getUserIdFromToken(req: Request): number | null {
   }
 }
 
-export const updateProduct = async (req: Request, res: Response) => {
+export const updateProduct = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const userId = getUserIdFromToken(req);
   const { name, description, price } = req.body;
   try {
     const product = await prisma.product.findUnique({ where: { id: Number(id) } });
-    if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
-    if (product.ownerId !== userId) return res.status(403).json({ error: 'Acesso negado.' });
+    if (!product) {
+      res.status(404).json({ error: 'Produto não encontrado.' });
+      return;
+    }
+    if (product.ownerId !== userId) {
+      res.status(403).json({ error: 'Acesso negado.' });
+      return;
+    }
     const updatedProduct = await prisma.product.update({
       where: { id: Number(id) },
       data: { name, description, price: Number(price) },
@@ -68,13 +78,19 @@ export const updateProduct = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteProduct = async (req: Request, res: Response) => {
+export const deleteProduct = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const userId = getUserIdFromToken(req);
   try {
     const product = await prisma.product.findUnique({ where: { id: Number(id) } });
-    if (!product) return res.status(404).json({ error: 'Produto não encontrado.' });
-    if (product.ownerId !== userId) return res.status(403).json({ error: 'Acesso negado.' });
+    if (!product) {
+      res.status(404).json({ error: 'Produto não encontrado.' });
+      return;
+    }
+    if (product.ownerId !== userId) {
+      res.status(403).json({ error: 'Acesso negado.' });
+      return;
+    }
     await prisma.product.delete({ where: { id: Number(id) } });
     res.json({ message: 'Produto deletado com sucesso.' });
   } catch (err) {
