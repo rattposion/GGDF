@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import { PrismaClient } from '../generated/prisma';
+import { getCache, setCache } from '../utils/cache';
 
 const prisma = new PrismaClient();
 const STEAM_API_KEY = process.env.STEAM_API_KEY;
@@ -54,9 +55,13 @@ export const importItems = async (req: Request, res: Response) => {
 
 export const getPrice = async (req: Request, res: Response) => {
   const { market_hash_name } = req.params;
+  const cacheKey = `price_${market_hash_name}`;
+  const cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
   try {
     const url = `https://steamcommunity.com/market/priceoverview/?appid=${APP_ID}&currency=7&market_hash_name=${encodeURIComponent(market_hash_name)}`;
     const { data } = await axios.get(url);
+    setCache(cacheKey, data, 300); // cache por 5 minutos
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar preço do item.' });
