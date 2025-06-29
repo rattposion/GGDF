@@ -15,8 +15,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   form.parse(req, async (err: any, fields: Fields, files: Files) => {
     if (err) return res.status(500).json({ error: 'Erro no upload' });
     let file: File | undefined;
-    if (Array.isArray(files.file)) file = files.file[0];
-    else file = files.file as File;
+    if (files.file) {
+      if (Array.isArray(files.file)) file = files.file[0];
+      else file = files.file as File;
+    }
     if (!file) return res.status(400).json({ error: 'Arquivo não enviado' });
     try {
       const upload = await cloudinary.uploader.upload(file.filepath, { folder: 'marketplace' });
