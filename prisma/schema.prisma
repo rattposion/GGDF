@@ -1,0 +1,532 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== USUÁRIOS =====
+model User {
+  id              String   @id @default(cuid())
+  steamId         String?  @unique
+  username        String   @unique
+  email           String   @unique
+  password        String?
+  avatar          String?
+  role            UserRole @default(COMPRADOR)
+  verified        Boolean  @default(false)
+  reputation      Float    @default(0)
+  documentSent    Boolean  @default(false)
+  pixKey          String?
+  balance         Float    @default(0)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret String?
+  emailVerified   Boolean  @default(false)
+  emailVerificationToken String?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  lastLogin       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relacionamentos
+  products        Product[]
+  ordersAsBuyer   Order[]   @relation("BuyerOrders")
+  ordersAsSeller  Order[]   @relation("SellerOrders")
+  reviews         Review[]
+  receivedReviews Review[]  @relation("SellerReviews")
+  questions       Question[]
+  answeredQuestions Question[] @relation("AnsweredQuestions")
+  notifications   Notification[]
+  walletTransactions WalletTransaction[]
+  chatRooms       ChatRoom[] @relation("UserChatRooms")
+  chatMessages    ChatMessage[]
+  disputes        Dispute[] @relation("UserDisputes")
+  disputeMessages DisputeMessage[]
+  steamItems      SteamItem[]
+  activityLogs    ActivityLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  VENDEDOR
+  COMPRADOR
+}
+
+// ===== CATEGORIAS =====
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  icon        String
+  description String?
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  subcategories Subcategory[]
+  products      Product[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id         String   @id @default(cuid())
+  name       String
+  slug       String   @unique
+  icon       String?
+  categoryId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relacionamentos
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products   Product[]
+
+  @@map("subcategories")
+}
+
+// ===== PRODUTOS =====
+model Product {
+  id              String        @id @default(cuid())
+  userId          String
+  type            ProductType
+  categoryId      String
+  subcategoryId   String?
+  title           String
+  description     String
+  price           Float
+  guarantee       String
+  status          ProductStatus @default(PENDING)
+  autoDelivery    Boolean       @default(false)
+  deliveryType    DeliveryType  @default(TEXT)
+  stock           Int?
+  featured        Boolean       @default(false)
+  validity        DateTime?
+  steamCustody    Boolean       @default(false)
+  steamItemId     String?
+  views           Int           @default(0)
+  favorites       Int           @default(0)
+  rating          Float         @default(0)
+  reviewCount     Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relacionamentos
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        Category      @relation(fields: [categoryId], references: [id])
+  subcategory     Subcategory?  @relation(fields: [subcategoryId], references: [id])
+  variations      ProductVariation[]
+  subscriptionPlans SubscriptionPlan[]
+  images          ProductImage[]
+  orders          Order[]
+  reviews         Review[]
+  questions       Question[]
+  steamItem       SteamItem?    @relation(fields: [steamItemId], references: [id])
+
+  @@map("products")
+}
+
+enum ProductType {
+  SKIN
+  CONTA
+  KEY
+  JOGO
+  SERVICO
+  ASSINATURA
+}
+
+enum ProductStatus {
+  PENDING
+  ACTIVE
+  PAUSED
+  SOLD
+  REJECTED
+}
+
+enum DeliveryType {
+  TEXT
+  LINK
+  FILE
+  STEAM_TRADE
+}
+
+model ProductVariation {
+  id          String  @id @default(cuid())
+  productId   String
+  name        String
+  description String?
+  price       Float
+  stock       Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orders      Order[]
+
+  @@map("product_variations")
+}
+
+model SubscriptionPlan {
+  id          String  @id @default(cuid())
+  productId   String
+  name        String
+  description String?
+  price       Float
+  duration    String  // "monthly", "lifetime", etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orders      Order[]
+
+  @@map("subscription_plans")
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  url       String
+  alt       String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+// ===== PEDIDOS =====
+model Order {
+  id                String      @id @default(cuid())
+  buyerId           String
+  sellerId          String
+  productId         String
+  variationId       String?
+  subscriptionPlanId String?
+  amount            Float
+  status            OrderStatus @default(PENDING)
+  paymentMethod     String      @default("pix")
+  paymentId         String?
+  deliveredAt       DateTime?
+  completedAt       DateTime?
+  variationId       String?
+  subscriptionPlanId String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relacionamentos
+  buyer             User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  seller            User        @relation("SellerOrders", fields: [sellerId], references: [id])
+  product           Product     @relation(fields: [productId], references: [id])
+  variation         ProductVariation? @relation(fields: [variationId], references: [id])
+  subscriptionPlan  SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
+  delivery          Delivery?
+  review            Review?
+  chatRoom          ChatRoom?
+  dispute           Dispute?
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  DELIVERED
+  COMPLETED
+  DISPUTED
+  CANCELLED
+  REFUNDED
+}
+
+// ===== ENTREGAS =====
+model Delivery {
+  id          String        @id @default(cuid())
+  orderId     String        @unique
+  type        DeliveryType
+  content     String?
+  fileUrl     String?
+  status      DeliveryStatus @default(PENDING)
+  deliveredAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relacionamentos
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("deliveries")
+}
+
+enum DeliveryStatus {
+  PENDING
+  DELIVERED
+  EXPIRED
+  FAILED
+}
+
+// ===== CHAT =====
+model ChatRoom {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  buyerId   String
+  sellerId  String
+  status    ChatStatus @default(ACTIVE)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  buyer     User     @relation("UserChatRooms", fields: [buyerId], references: [id])
+  seller    User     @relation("UserChatRooms", fields: [sellerId], references: [id])
+  messages  ChatMessage[]
+
+  @@map("chat_rooms")
+}
+
+enum ChatStatus {
+  ACTIVE
+  EXPIRED
+  CLOSED
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  chatRoomId String
+  userId    String
+  content   String
+  type      MessageType @default(TEXT)
+  fileUrl   String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  chatRoom  ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("chat_messages")
+}
+
+enum MessageType {
+  TEXT
+  FILE
+  LINK
+  IMAGE
+}
+
+// ===== AVALIAÇÕES =====
+model Review {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  productId   String
+  buyerId     String
+  sellerId    String
+  rating      Int
+  comment     String?
+  sellerReply String?
+  sellerRepliedAt DateTime?
+  helpful     Int     @default(0)
+  reported    Boolean @default(false)
+  verified    Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+  buyer       User     @relation(fields: [buyerId], references: [id])
+  seller      User     @relation("SellerReviews", fields: [sellerId], references: [id])
+
+  @@map("reviews")
+}
+
+// ===== PERGUNTAS =====
+model Question {
+  id          String   @id @default(cuid())
+  productId   String
+  userId      String
+  question    String
+  answer      String?
+  answeredBy  String?
+  answeredAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id])
+  answeredByUser User? @relation("AnsweredQuestions", fields: [answeredBy], references: [id])
+
+  @@map("questions")
+}
+
+// ===== CARTEIRA =====
+model WalletTransaction {
+  id          String              @id @default(cuid())
+  userId      String
+  type        TransactionType
+  amount      Float
+  description String
+  status      TransactionStatus   @default(PENDING)
+  reference   String?             // ID do pedido, saque, etc.
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  // Relacionamentos
+  user        User                @relation(fields: [userId], references: [id])
+
+  @@map("wallet_transactions")
+}
+
+enum TransactionType {
+  SALE
+  PURCHASE
+  WITHDRAWAL
+  BONUS
+  FEE
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// ===== NOTIFICAÇÕES =====
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  type      NotificationType
+  read      Boolean  @default(false)
+  link      String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  SALE
+  PURCHASE
+  PAYMENT
+  MESSAGE
+  REVIEW
+  DISPUTE
+  WITHDRAWAL
+  QUESTION
+  ANSWER
+  SYSTEM
+}
+
+// ===== DISPUTAS =====
+model Dispute {
+  id          String        @id @default(cuid())
+  orderId     String        @unique
+  userId      String
+  reason      String
+  status      DisputeStatus @default(OPEN)
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  resolution  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relacionamentos
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user        User          @relation("UserDisputes", fields: [userId], references: [id])
+  resolvedByUser User?      @relation("ResolvedDisputes", fields: [resolvedBy], references: [id])
+  messages    DisputeMessage[]
+
+  @@map("disputes")
+}
+
+enum DisputeStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  ESCALATED
+}
+
+model DisputeMessage {
+  id        String   @id @default(cuid())
+  disputeId String
+  userId    String
+  content   String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  dispute   Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("dispute_messages")
+}
+
+// ===== STEAM =====
+model SteamItem {
+  id              String   @id @default(cuid())
+  userId          String
+  assetId         String
+  classId         String
+  instanceId      String
+  name            String
+  marketName      String
+  type            String
+  rarity          String
+  quality         String
+  game            String
+  iconUrl         String
+  imageUrl        String
+  float           Float?
+  wear            String?
+  estimatedPrice  Float
+  tradable        Boolean  @default(true)
+  marketable      Boolean  @default(true)
+  inCustody       Boolean  @default(false)
+  listedForSale   Boolean  @default(false)
+  botOfferId      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relacionamentos
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products        Product[]
+
+  @@map("steam_items")
+}
+
+// ===== LOGS =====
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  target    String?
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
+} 
