@@ -44,17 +44,19 @@ export const verifyPassword = async (password: string, hashedPassword: string): 
 }
 
 // Funções JWT
-export const generateToken = (payload: any, expiresIn: string = '7d'): string => {
-  return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn })
-}
+// export const generateToken = (payload: any, expiresIn: string = '7d'): string => {
+//   const secret = process.env.JWT_SECRET || 'fallback-secret'
+//   return jwt.sign(payload, secret, { expiresIn })
+// }
 
-export const verifyToken = (token: string): any => {
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET!)
-  } catch (error) {
-    return null
-  }
-}
+// export const verifyToken = (token: string): any => {
+//   try {
+//     const secret = process.env.JWT_SECRET || 'fallback-secret'
+//     return jwt.verify(token, secret)
+//   } catch (error) {
+//     return null
+//   }
+// }
 
 // Funções de sanitização
 export const sanitizeText = (text: string): string => {
@@ -64,7 +66,7 @@ export const sanitizeText = (text: string): string => {
   })
 }
 
-export const sanitizeHtml = (html: string): string => {
+export const sanitizeHtmlContent = (html: string): string => {
   return sanitizeHtml(html, {
     allowedTags: ['b', 'i', 'em', 'strong', 'a', 'br', 'p'],
     allowedAttributes: {

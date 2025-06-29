@@ -1,17 +1,41 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import SteamProvider from 'next-auth/providers/steam'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 
+// Extender os tipos do NextAuth
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string
+      email: string
+      username: string
+      role: string
+      avatar?: string
+    }
+  }
+  
+  interface User {
+    id: string
+    email: string
+    username: string
+    role: string
+    avatar?: string
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string
+    role: string
+    username: string
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    SteamProvider({
-      clientId: process.env.STEAM_CLIENT_ID!,
-      clientSecret: process.env.STEAM_CLIENT_SECRET!,
-    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -55,35 +79,40 @@ export const authOptions: NextAuthOptions = {
         token.username = user.username
       }
       
+      // Processar login Steam se necessário
       if (account?.provider === 'steam') {
-        // Processar login Steam
-        const steamUser = await prisma.user.upsert({
-          where: { steamId: token.sub! },
-          update: {
-            lastLogin: new Date(),
-          },
-          create: {
-            steamId: token.sub!,
-            username: token.name!,
-            email: token.email!,
-            avatar: token.picture,
-            verified: true,
-            role: 'COMPRADOR',
-          },
-        })
-        
-        token.id = steamUser.id
-        token.role = steamUser.role
-        token.username = steamUser.username
+        try {
+          // Buscar ou criar usuário Steam
+          const steamUser = await prisma.user.upsert({
+            where: { steamId: token.sub! },
+            update: {
+              lastLogin: new Date(),
+            },
+            create: {
+              steamId: token.sub!,
+              username: token.name!,
+              email: token.email!,
+              avatar: token.picture,
+              verified: true,
+              role: 'COMPRADOR',
+            },
+          })
+          
+          token.id = steamUser.id
+          token.role = steamUser.role
+          token.username = steamUser.username
+        } catch (error) {
+          console.error('Erro ao processar login Steam:', error)
+        }
       }
       
       return token
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id as string
-        session.user.role = token.role as string
-        session.user.username = token.username as string
+        session.user.id = token.id
+        session.user.role = token.role
+        session.user.username = token.username
       }
       return session
     },
