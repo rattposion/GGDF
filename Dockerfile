@@ -65,8 +65,9 @@ ENV HOSTNAME="0.0.0.0"
 COPY --from=builder /app/public ./public
 
 # Copiar arquivos de build
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 # Copiar cliente Prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
@@ -89,4 +90,4 @@ COPY --chown=nextjs:nodejs docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["node", "server.js"] 
+CMD ["npm", "start"] 
