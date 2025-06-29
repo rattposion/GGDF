@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import formidable, { Fields, Files, File } from 'formidable';
 import fs from 'fs';
-import cloudinary from '../services/cloudinary';
+import cloudinary from '../../services/cloudinary';
 
 export const config = {
   api: {
