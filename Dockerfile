@@ -16,8 +16,8 @@ WORKDIR /app
 COPY package.json ./
 COPY prisma ./prisma/
 
-# Instalar dependências (usando npm install em vez de npm ci)
-RUN npm install --only=production && npm cache clean --force
+# Instalar todas as dependências (incluindo devDependencies para build)
+RUN npm install && npm cache clean --force
 
 # ========================================
 # Estágio 2: Build da aplicação
