@@ -6,8 +6,8 @@
 # Estágio 1: Dependências de desenvolvimento
 FROM node:18-alpine AS deps
 
-# Instalar dependências do sistema
-RUN apk add --no-cache libc6-compat
+# Instalar dependências do sistema incluindo OpenSSL
+RUN apk add --no-cache libc6-compat openssl
 
 # Definir diretório de trabalho
 WORKDIR /app
@@ -23,8 +23,8 @@ RUN npm ci --only=production && npm cache clean --force
 # Estágio 2: Build da aplicação
 FROM node:18-alpine AS builder
 
-# Instalar dependências do sistema
-RUN apk add --no-cache libc6-compat
+# Instalar dependências do sistema incluindo OpenSSL
+RUN apk add --no-cache libc6-compat openssl
 
 WORKDIR /app
 
@@ -49,8 +49,8 @@ FROM node:18-alpine AS runner
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Instalar dependências do sistema
-RUN apk add --no-cache libc6-compat
+# Instalar dependências do sistema incluindo OpenSSL
+RUN apk add --no-cache libc6-compat openssl
 
 # Definir diretório de trabalho
 WORKDIR /app
