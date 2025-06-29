@@ -1,5 +1,5 @@
 # ========================================
-# Dockerfile para GGDF Backend
+# Dockerfile para GGDF Backend - Railway
 # Marketplace de Produtos Digitais
 # ========================================
 
@@ -13,11 +13,11 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copiar arquivos de dependências
-COPY package.json ./
+COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
-# Instalar todas as dependências (incluindo devDependencies para build)
-RUN npm install && npm cache clean --force
+# Instalar todas as dependências
+RUN npm ci --only=production && npm cache clean --force
 
 # ========================================
 # Estágio 2: Build da aplicação
@@ -55,6 +55,8 @@ WORKDIR /app
 # Definir variáveis de ambiente
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # Copiar arquivos necessários
 COPY --from=builder /app/public ./public
@@ -78,10 +80,6 @@ USER nextjs
 
 # Expor porta
 EXPOSE 3000
-
-# Variável de ambiente para o host
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
 # Script de inicialização
 COPY --chown=nextjs:nodejs docker-entrypoint.sh /usr/local/bin/
