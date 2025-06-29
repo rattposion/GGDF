@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../../../lib/prisma'
-import { createError, successResponse, logActivity } from '../../../../../lib/utils'
+import { prisma } from '../../../../lib/prisma'
+import { createError, successResponse, logActivity } from '../../../../lib/utils'
 import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
@@ -9,8 +9,9 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('x-hub-signature-256')
     
     // Verificar assinatura do webhook (segurança)
+    const webhookSecret = process.env.WEBHOOK_SECRET || 'default-webhook-secret'
     const expectedSignature = crypto
-      .createHmac('sha256', process.env.GERENCIANET_CLIENT_SECRET!)
+      .createHmac('sha256', webhookSecret)
       .update(body)
       .digest('hex')
     

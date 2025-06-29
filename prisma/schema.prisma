@@ -33,6 +33,7 @@ model User {
   lastLogin       DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  resolvedDisputes Dispute[] @relation("ResolvedDisputes")
 
   // Relacionamentos
   products        Product[]
@@ -44,7 +45,8 @@ model User {
   answeredQuestions Question[] @relation("AnsweredQuestions")
   notifications   Notification[]
   walletTransactions WalletTransaction[]
-  chatRooms       ChatRoom[] @relation("UserChatRooms")
+  chatRoomsAsBuyer  ChatRoom[] @relation("BuyerChatRooms")
+  chatRoomsAsSeller ChatRoom[] @relation("SellerChatRooms")
   chatMessages    ChatMessage[]
   disputes        Dispute[] @relation("UserDisputes")
   disputeMessages DisputeMessage[]
@@ -221,8 +223,6 @@ model Order {
   paymentId         String?
   deliveredAt       DateTime?
   completedAt       DateTime?
-  variationId       String?
-  subscriptionPlanId String?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
@@ -289,8 +289,8 @@ model ChatRoom {
 
   // Relacionamentos
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  buyer     User     @relation("UserChatRooms", fields: [buyerId], references: [id])
-  seller    User     @relation("UserChatRooms", fields: [sellerId], references: [id])
+  buyer     User     @relation("BuyerChatRooms", fields: [buyerId], references: [id])
+  seller    User     @relation("SellerChatRooms", fields: [sellerId], references: [id])
   messages  ChatMessage[]
 
   @@map("chat_rooms")
