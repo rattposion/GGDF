@@ -13,11 +13,11 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copiar arquivos de dependências
-COPY package.json package-lock.json* ./
+COPY package.json ./
 COPY prisma ./prisma/
 
-# Instalar dependências
-RUN npm ci --only=production && npm cache clean --force
+# Instalar dependências (usando npm install em vez de npm ci)
+RUN npm install --only=production && npm cache clean --force
 
 # ========================================
 # Estágio 2: Build da aplicação

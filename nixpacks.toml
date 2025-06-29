@@ -3,7 +3,7 @@ nixPkgs = ["nodejs_18", "postgresql_15"]
 
 [phases.install]
 cmds = [
-  "npm ci --only=production",
+  "npm install --only=production",
   "npx prisma generate"
 ]
 
