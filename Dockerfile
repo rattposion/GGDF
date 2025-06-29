@@ -35,6 +35,14 @@ COPY . .
 # Garante que a pasta public exista (mesmo que vazia)
 RUN mkdir -p public
 
+# Definir variáveis de ambiente para build
+ARG DATABASE_URL
+ARG NEXTAUTH_SECRET
+ARG NEXTAUTH_URL
+ENV DATABASE_URL=$DATABASE_URL
+ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+ENV NEXTAUTH_URL=$NEXTAUTH_URL
+
 # Gerar cliente Prisma
 RUN npx prisma generate
 

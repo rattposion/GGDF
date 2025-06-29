@@ -14,6 +14,12 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
+# Verificar se OpenSSL está instalado
+if ! command -v openssl &> /dev/null; then
+    echo "❌ OpenSSL não encontrado!"
+    exit 1
+fi
+
 # Gerar cliente Prisma
 echo "🔧 Gerando cliente Prisma..."
 npx prisma generate

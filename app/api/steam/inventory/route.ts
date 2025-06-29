@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '../../../../lib/prisma'
 import { createError, successResponse } from '../../../../lib/utils'
+import { getSteamInventory } from '../../../../lib/steam'
+
+// Forçar renderização dinâmica
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {

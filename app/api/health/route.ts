@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { createError, successResponse } from '../../../lib/utils';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+// Forçar renderização dinâmica
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
   try {
     // Verificar conexão com banco de dados
     await prisma.$queryRaw`SELECT 1`;
