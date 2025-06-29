@@ -10,12 +10,15 @@
     "lint": "next lint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "bot:start": "tsx scripts/start-bot.ts",
     "bot:dev": "tsx --watch scripts/start-bot.ts",
-    "setup": "npm run db:generate && npm run db:push && npm run db:seed"
+    "setup": "npm run db:generate && npm run db:push && npm run db:seed",
+    "health": "curl -f http://localhost:3000/api/health || exit 1",
+    "postinstall": "prisma generate",
+    "railway:deploy": "npm run db:migrate && npm start"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
