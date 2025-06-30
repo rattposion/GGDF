@@ -1,16 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    outputStandalone: true,
-  },
+  // Configuração para Railway
   output: 'standalone',
+  
+  // Configurações de imagem
   images: {
-    domains: ['localhost', 'res.cloudinary.com'],
+    domains: ['localhost', 'res.cloudinary.com', 'ggdf-production.up.railway.app'],
+    unoptimized: true,
   },
+  
+  // Configurações de ambiente
   env: {
     CUSTOM_KEY: 'my-value',
   },
-  // Desabilitar renderização estática para rotas que usam recursos dinâmicos
+  
+  // Headers para APIs
   async headers() {
     return [
       {
@@ -24,9 +28,23 @@ const nextConfig = {
       },
     ]
   },
-  // Configurar para não tentar renderizar rotas de API estaticamente
-  async rewrites() {
-    return []
+  
+  // Configurações de build
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  
+  // Configurações de servidor
+  serverRuntimeConfig: {
+    // Configurações que só existem no servidor
+  },
+  
+  publicRuntimeConfig: {
+    // Configurações que existem no cliente e servidor
   },
 }
 
